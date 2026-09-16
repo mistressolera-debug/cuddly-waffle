@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monarch of the Moon Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Inter:wght=300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .heading-serif { font-family: 'Playfair Display', Georgia, serif; }
+        
+        /* Custom Theme Colors from The Veiled Keeper */
+        .dark-bg { background-color: #0c0714; }
+        .section-bg { background-color: #221135; }
+        .text-gold { color: #dfb75c; }
+        .border-gold { border-color: rgba(223, 183, 92, 0.3); }
+        .accent-lavender { color: #bfa1eb; }
+        
+        /* Logo and Heading Glow Effects — Aura + Shimmer */
+        .owl-glow {
+            position: relative;
+            filter: drop-shadow(0 0 12px rgba(223, 183, 92, 0.45)) 
+                    drop-shadow(0 0 22px rgba(191, 161, 235, 0.35));
+            animation: owlPulse 5s ease-in-out infinite;
+        }
+
+        /* Rotating golden-purple aura */
+        .owl-glow::before {
+            content: "";
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            border: 1.5px solid transparent;
+            background: linear-gradient(
+                45deg, 
+                #dfb75c, 
+                transparent 40%, 
+                #bfa1eb, 
+                transparent 70%, 
+                #dfb75c
+            ) border-box;
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) padding-box, 
+                linear-gradient(#fff 0 0);
+            mask: 
+                linear-gradient(#fff 0 0) padding-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: spinAura 14s linear infinite;
+            opacity: 0.75;
+            pointer-events: none;
+        }
+
+        /* Soft moonlight shimmer sweep */
+        .owl-glow::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 70%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(223, 183, 92, 0.22),
+                rgba(191, 161, 235, 0.15),
+                transparent
+            );
+            animation: shimmerSweep 7s ease-in-out infinite;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+
+        @keyframes spinAura {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes shimmerSweep {
+            0%   { left: -120%; }
+            35%  { left: 130%; }
+            100% { left: 130%; }
+        }
+
+        @keyframes owlPulse {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+                filter: drop-shadow(0 0 10px rgba(223, 183, 92, 0.4)) 
+                        drop-shadow(0 0 18px rgba(191, 161, 235, 0.3));
+            }
+            50% {
+                transform: translateY(-4px) scale(1.03);
+                filter: drop-shadow(0 0 18px rgba(223, 183, 92, 0.7)) 
+                        drop-shadow(0 0 32px rgba(191, 161, 235, 0.5));
+            }
+        }
+        
+        .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5); }
+        body.modal-open,
+        body.age-locked { overflow: hidden; }
+        body.age-locked > :not(#age-gate) {
+            filter: blur(8px);
+            pointer-events: none;
+            user-select: none;
+        }
+        .modal-panel { animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        /* Censored storefront previews — full media only after purchase */
+        .media-blur {
+            filter: blur(18px) brightness(0.55) saturate(0.85);
+            transform: scale(1.12);
+        }
+        .media-blur-soft {
+            filter: blur(10px) brightness(0.7) saturate(0.9);
+            transform: scale(1.08);
+        }
+        .media-frame {
+            position: relative;
+            overflow: hidden;
+            background: #0d0a14;
+        }
+        .media-frame::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 20%, rgba(12, 7, 20, 0.65) 100%);
+            pointer-events: none;
+        }
+        .lock-badge {
+            backdrop-filter: blur(6px);
+        }
+        /* Fixed navbar: anchors land below it */
+        html { scroll-behavior: smooth; }
+        section[id], header[id] { scroll-margin-top: 6rem; }
+        /* Nav brand on small screens */
+        @media (max-width: 380px) {
+            .brand-text { max-width: 9rem; }
+        }
+    </style>
+</head>
+<body class="dark-bg text-white overflow-x-hidden age-locked">
+
+    <!-- 18+ Age Verification -->
+    <div id="age-gate"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="age-gate-title"
+         aria-describedby="age-gate-desc"
+         class="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/90">
+        <div class="modal-panel w-full max-w-md rounded-3xl border border-purple-500/40 bg-[#111114] p-8 text-center shadow-2xl shadow-purple-900/30">
+            <div id="age-gate-prompt">
+                <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-purple-500/50 bg-purple-600/20">
+                    <span class="text-2xl font-bold text-purple-300">18+</span>
+                </div>
+                <h2 id="age-gate-title" class="heading-serif text-3xl font-bold mb-3 text-gold">Age Verification</h2>
+                <p id="age-gate-desc" class="text-white/70 mb-2 leading-relaxed">
+                    This website contains adult content intended only for adults.
+                </p>
+                <p class="text-white/90 font-medium mb-6">
+                    Are you 18 years of age or older?
+                </p>
+
+                <label class="mb-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-left hover:border-purple-500/40 transition-colors">
+                    <input id="age-remember"
+                           type="checkbox"
+                           class="mt-1 h-4 w-4 shrink-0 rounded border-white/30 bg-transparent accent-purple-600">
+                    <span class="text-sm text-white/80 leading-snug">
+                        Remember my choice for <strong class="text-white font-medium">24 hours</strong>
+                        <span class="block text-xs text-white/45 mt-1">Optional. Skip this check on this browser until then.</span>
+                    </span>
+                </label>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="button"
+                            onclick="confirmAge(true)"
+                            class="flex-1 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 font-semibold transition-colors">
+                        Yes, I am 18+
+                    </button>
+                    <button type="button"
+                            onclick="confirmAge(false)"
+                            class="flex-1 py-3.5 rounded-2xl border border-white/25 hover:bg-white/10 font-medium transition-colors">
+                        No, I am under 18
+                    </button>
+                </div>
+                <p class="text-xs text-white/40 mt-6">
+                    By entering, you confirm you are of legal age in your jurisdiction to view adult content.
+                </p>
+            </div>
+
+            <div id="age-gate-denied" class="hidden">
+                <i class="fas fa-ban text-5xl text-red-400 mb-5" aria-hidden="true"></i>
+                <h2 class="heading-serif text-3xl font-bold mb-3">Access Denied</h2>
+                <p class="text-white/70 mb-8 leading-relaxed">
+                    You must be 18 or older to enter this site. You will be redirected shortly.
+                </p>
+                <a href="https://www.google.com/"
+                   class="inline-flex w-full justify-center py-3.5 rounded-2xl border border-white/25 hover:bg-white/10 font-medium transition-colors">
+                    Leave this site
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-[#0c0714]/95 backdrop-blur-md border-b border-white/10">
+        <div class="max-w-screen-2xl mx-auto px-6 py-5 flex items-center justify-between">
+            <a href="#top" class="flex items-center gap-x-3 min-w-0">
+                <img src="media/photos/logo-veiled.svg"
+                     alt="Mistress Solena — The Veiled Keeper Logo"
+                     class="w-11 h-11 shrink-0 object-contain rounded-full border border-[#dfb75c]/40 owl-glow"
+                     onerror="this.onerror=null;this.src='media/photos/logo-veiled.png';this.onerror=null;this.src='media/photos/1779854354608.jpg'">
+                <div class="brand-text min-w-0">
+                    <span class="font-bold text-lg sm:text-2xl tracking-tighter heading-serif truncate block text-gold">Monarch of the Moon</span>
+                    <span class="block text-[10px] text-purple-300 -mt-1 tracking-[2px]">SHOP</span>
+                </div>
+            </a>
+
+            <div class="hidden md:flex items-center gap-x-9 text-sm font-medium">
+                <a href="#about" class="hover:text-purple-300 transition-colors">The Monarch</a>
+                <a href="#experience" class="hover:text-purple-300 transition-colors">The Experience</a>
+                <a href="#vault" class="hover:text-purple-300 transition-colors">The Vault</a>
+                <a href="#gallery" class="hover:text-purple-300 transition-colors">Gallery</a>
+                <a href="#book" class="hover:text-purple-300 transition-colors">Book</a>
+            </div>
+
+            <div class="flex items-center gap-x-4">
+                <button type="button" onclick="showCart()" aria-label="Open cart"
+                        class="flex items-center gap-x-2 px-4 py-2 rounded-full border border-white/20 hover:bg-white/5 transition-colors relative">
+                    <i class="fas fa-shopping-bag text-lg" aria-hidden="true"></i>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-purple-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold" style="display: none;">0</span>
+                </button>
+                <button type="button" class="md:hidden p-2" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
+                    <i class="fas fa-bars text-2xl" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden border-t border-white/10 px-6 py-4 space-y-3 text-sm font-medium bg-[#0c0714]/98">
+            <a href="#about" onclick="toggleMobileMenu(false)" class="block py-2 hover:text-purple-300">The Monarch</a>
+            <a href="#experience" onclick="toggleMobileMenu(false)" class="block py-2 hover:text-purple-300">The Experience</a>
+            <a href="#vault" onclick="toggleMobileMenu(false)" class="block py-2 hover:text-purple-300">The Vault</a>
+            <a href="#gallery" onclick="toggleMobileMenu(false)" class="block py-2 hover:text-purple-300">Gallery</a>
+            <a href="#book" onclick="toggleMobileMenu(false)" class="block py-2 hover:text-purple-300">Book</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header id="top" class="min-h-[100dvh] flex items-center pt-16 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(#dfb75c15_1px,transparent_1px)] bg-[length:6px_6px]"></div>
+        <div class="max-w-screen-2xl mx-auto px-6 relative z-10">
+            <div class="max-w-3xl">
+                <h1 class="text-4xl sm:text-6xl md:text-7xl font-bold leading-none tracking-tighter heading-serif mb-4 text-gold">
+                    Monarch of the Moon Shop
+                </h1>
+                <p class="text-2xl sm:text-3xl md:text-4xl text-purple-300 font-light mb-8">Curated by Mistress Solena</p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="#vault" class="inline-flex items-center justify-center px-9 py-4 bg-purple-600 hover:bg-purple-700 rounded-full text-lg font-semibold transition-colors">Enter The Vault</a>
+                    <a href="#book" class="inline-flex items-center justify-center px-9 py-4 border border-white/60 hover:bg-white/10 rounded-full text-lg font-medium transition-colors">Book Private Audience</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- About -->
+    <section id="about" class="max-w-screen-2xl mx-auto px-6 py-20">
+        <div class="grid md:grid-cols-12 gap-12 items-center">
+            <div class="md:col-span-7">
+                <h2 class="text-4xl sm:text-5xl md:text-6xl font-bold heading-serif mb-8 text-gold">I am the night.<br>I am the moon.</h2>
+                <div class="text-lg text-white/90 space-y-4">
+                    <p>Sovereign of shadows and ruler of desire. From the moonlit forests of Ontario, I create immersive digital experiences and exquisite physical art that awaken the divine feminine within.</p>
+                </div>
+            </div>
+            <div class="md:col-span-5">
+                <div class="media-frame rounded-3xl shadow-2xl aspect-[4/3] border border-gold/20">
+                    <img data-local="media/photos/mistress.jpg"
+                         src="media/photos/mistress.jpg"
+                         class="media-blur-soft w-full h-full object-cover"
+                         alt="Mistress Solena — soft silhouette preview"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='media/photos/1779854354608.jpg';">
+                    <div class="absolute inset-0 z-10 flex items-end justify-center p-4 pointer-events-none">
+                        <span class="lock-badge text-xs tracking-wide uppercase text-white/80 bg-black/50 border border-white/15 px-3 py-1.5 rounded-full">Soft preview</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Experience -->
+    <section id="experience" class="section-bg py-20 border-y border-white/5">
+        <div class="max-w-screen-2xl mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold heading-serif mb-12 text-gold">Ways to Serve</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-[#0c0714] p-8 rounded-3xl border border-white/10 hover:border-[#dfb75c]/40 transition-colors text-left flex flex-col">
+                    <h3 class="text-2xl font-semibold mb-3 text-gold">Digital Offerings</h3>
+                    <p class="text-white/70 flex-1">4K videos &amp; photo sets — full unlock on Fansly after payment.</p>
+                    <button type="button" data-link="fansly" class="mt-6 w-full py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 font-semibold text-sm transition-colors">
+                        Open The Vault on Fansly
+                    </button>
+                </div>
+                <div class="bg-[#0c0714] p-8 rounded-3xl border border-white/10 hover:border-[#dfb75c]/40 transition-colors text-left flex flex-col">
+                    <h3 class="text-2xl font-semibold mb-3 text-gold">Physical Prints</h3>
+                    <p class="text-white/70 flex-1">Signed museum-quality art prints and limited canvases — ships from Ontario.</p>
+                    <button type="button" data-link="shopify" class="mt-6 w-full py-3 rounded-2xl border border-white/25 hover:bg-white/10 font-semibold text-sm transition-colors">
+                        Shop Prints on Shopify
+                    </button>
+                </div>
+                <div class="bg-[#0c0714] p-8 rounded-3xl border border-white/10 hover:border-[#dfb75c]/40 transition-colors text-left flex flex-col">
+                    <h3 class="text-2xl font-semibold mb-3 text-gold">Private Audiences</h3>
+                    <p class="text-white/70 flex-1">In-person sessions book on the calendar. Online sessions are arranged separately.</p>
+                    <button type="button" data-link="calendly" class="mt-6 w-full py-3 rounded-2xl border border-purple-500/50 hover:bg-purple-600/20 font-semibold text-sm transition-colors">
+                        Book in person
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Vault -->
+    <section id="vault" class="max-w-screen-2xl mx-auto px-6 py-20">
+        <h2 class="text-5xl font-bold heading-serif text-center mb-4 text-gold">The Vault</h2>
+        <p class="text-center text-white/70 mb-3">Teasers below · Full digital unlock on Fansly · Prints ship via Shopify (Ontario)</p>
+        <p class="text-center text-purple-300/80 text-sm mb-8 max-w-xl mx-auto">
+            Blurred silhouettes &amp; short video previews only. Purchase unlocks the real files off-site.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center mb-12">
+            <button type="button" data-link="fansly"
+                    class="px-8 py-3.5 rounded-full bg-purple-600 hover:bg-purple-700 font-semibold transition-colors">
+                <i class="fas fa-lock-open mr-2" aria-hidden="true"></i>Unlock digital on Fansly
+            </button>
+            <button type="button" data-link="shopify"
+                    class="px-8 py-3.5 rounded-full border border-white/40 hover:bg-white/10 font-medium transition-colors">
+                <i class="fas fa-shipping-fast mr-2" aria-hidden="true"></i>Buy prints on Shopify
+            </button>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="products-container"></div>
+    </section>
+
+    <!-- Gallery -->
+    <section id="gallery" class="section-bg border-y border-white/5">
+        <div class="max-w-screen-2xl mx-auto px-6 py-20">
+            <h2 class="text-4xl md:text-5xl font-bold heading-serif text-center mb-3 text-gold">Gallery</h2>
+            <p class="text-center text-white/60 text-sm mb-10">Glimpses only — full clarity lives in The Vault.</p>
+            <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+        </div>
+    </section>
+
+    <!-- Video Teaser Modal -->
+    <div id="teaser-modal"
+         class="hidden fixed inset-0 z-[96] bg-black/85 items-center justify-center p-6"
+         onclick="if (event.target.id === 'teaser-modal') closeTeaser()">
+        <div class="modal-panel w-full max-w-lg rounded-3xl border border-[#dfb75c]/30 bg-[#111114] overflow-hidden" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                <div>
+                    <h3 id="teaser-title" class="font-semibold text-lg text-gold">Preview</h3>
+                    <p class="text-xs text-purple-300">~5 second teaser · full video after purchase</p>
+                </div>
+                <button type="button" onclick="closeTeaser()" class="text-3xl leading-none" aria-label="Close preview">&times;</button>
+            </div>
+            <div class="relative bg-black aspect-video">
+                <video id="teaser-video"
+                       class="w-full h-full object-contain"
+                       playsinline
+                       muted
+                       controls
+                       controlslist="nodownload noplaybackrate"
+                       disablepictureinpicture></video>
+                <div id="teaser-fallback" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                    <i class="fas fa-lock text-3xl text-purple-400 mb-3" aria-hidden="true"></i>
+                    <p class="text-white/80 text-sm">Teaser clip not loaded yet. Drop a short preview into <code class="text-purple-300">media/videos/</code>.</p>
+                </div>
+            </div>
+            <div class="p-5">
+                <button type="button" id="teaser-add-btn" class="w-full py-3.5 bg-purple-600 hover:bg-purple-700 rounded-2xl font-semibold transition-colors">
+                    Unlock full video — Add to Vault
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Private Audience -->
+    <section id="book" class="max-w-screen-2xl mx-auto px-6 py-20">
+        <div class="section-bg border border-white/10 rounded-3xl p-8 md:p-12 max-w-3xl mx-auto text-center">
+            <h2 class="text-4xl md:text-5xl font-bold heading-serif mb-4 text-gold">Book In Person</h2>
+            <p class="text-white/70 mb-6 max-w-xl mx-auto">
+                This calendar is for in-person sessions only. 18+ only. Online sessions are arranged separately — not through this booking page.
+            </p>
+
+            <!-- Pricing -->
+            <div class="grid sm:grid-cols-2 gap-4 max-w-md mx-auto mb-8 text-left">
+                <div class="rounded-2xl border border-white/10 bg-black/30 px-5 py-4">
+                    <p class="text-xs uppercase tracking-widest text-white/50 mb-1">Half Hour</p>
+                    <p class="text-2xl font-semibold text-gold">$225</p>
+                    <p class="text-xs text-white/45 mt-1">30 minutes · full session rate</p>
+                    <p class="text-xs text-purple-300 mt-2">$100 deposit at booking · $125 cash when the session is honored</p>
+                </div>
+                <div class="rounded-2xl border border-purple-500/40 bg-purple-900/20 px-5 py-4">
+                    <p class="text-xs uppercase tracking-widest text-purple-300/80 mb-1">1 Hour Session</p>
+                    <p class="text-2xl font-semibold text-gold">$450</p>
+                    <p class="text-xs text-white/45 mt-1">60 minutes · full session rate</p>
+                    <p class="text-xs text-purple-300 mt-2">$200 deposit at booking · $250 cash when the session is honored</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-white/45 mb-2 max-w-lg mx-auto">
+                A non-refundable deposit is taken online when you book and is applied toward the session total.
+                The remaining balance is due in cash in person once the booking is honored at the session.
+                Cancellations or reschedules with less than 48 hours’ notice forfeit the deposit.
+            </p>
+            <p class="text-xs text-white/40 mb-8 max-w-lg mx-auto">
+                You will be asked to review and agree to the Session Agreement before the calendar opens.
+            </p>
+
+            <button type="button" data-link="calendly"
+                    class="inline-flex items-center justify-center gap-2 px-10 py-4 bg-purple-600 hover:bg-purple-700 rounded-full text-lg font-semibold mb-8 transition-colors">
+                <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                Open booking calendar
+            </button>
+
+            <!-- Inline Calendly -->
+            <div id="calendly-wrap" class="hidden rounded-2xl overflow-hidden border border-white/10 bg-black/30 min-h-[620px]">
+                <div id="calendly-embed" class="calendly-inline-widget w-full" style="min-width:320px;height:700px;"></div>
+            </div>
+            <div id="calendly-setup-hint" class="text-sm text-amber-200/90 bg-amber-500/10 border border-amber-500/30 rounded-2xl px-5 py-4 text-left">
+                <strong class="block mb-1">Setup:</strong>
+                Paste your Calendly link into <code class="text-purple-300">LINKS.calendly</code> near the top of
+                <code class="text-purple-300">index.html</code>.
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/10">
+        <div class="max-w-screen-2xl mx-auto px-6 text-center text-sm text-white/60 space-y-4">
+            <div class="flex flex-wrap items-center justify-center gap-4 text-sm">
+                <button type="button" data-link="fansly" class="hover:text-purple-300 transition-colors">Fansly Vault</button>
+                <span class="text-white/20">·</span>
+                <button type="button" data-link="shopify" class="hover:text-purple-300 transition-colors">Shopify Prints</button>
+                <span class="text-white/20">·</span>
+                <button type="button" data-link="calendly" class="hover:text-purple-300 transition-colors">Book Session</button>
+                <span class="text-white/20">·</span>
+                <button type="button" onclick="openPrivacy()" class="hover:text-purple-300 transition-colors">Privacy Policy</button>
+            </div>
+            <p>© <span id="year">2026</span> Monarch of the Moon Shop • Ontario, Canada • All rights reserved</p>
+            <p class="text-xs text-white/40">18+ only. Digital unlocks on Fansly · Physical prints via Shopify · Sessions via calendar.</p>
+            <p class="text-xs text-white/40">Contact: <a href="mailto:mistresssolena@monarchofthemoon.shop" class="hover:text-purple-300 transition-colors">mistresssolena@monarchofthemoon.shop</a></p>
+        </div>
+    </footer>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" role="dialog" aria-modal="true" aria-labelledby="cart-title"
+         onclick="if (event.target.id === 'cart-modal') hideCart()"
+         class="hidden fixed inset-0 bg-black/70 z-[90] items-end md:items-center justify-center">
+        <div onclick="event.stopPropagation()"
+             class="modal-panel bg-[#111114] w-full md:w-[440px] md:rounded-3xl md:m-4 rounded-t-3xl p-6 max-h-[85vh] overflow-auto border border-white/10">
+
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="cart-title" class="text-2xl font-semibold text-gold">Your Vault</h3>
+                <button type="button" onclick="hideCart()" class="text-3xl leading-none" aria-label="Close cart">&times;</button>
+            </div>
+
+            <div id="cart-items" class="space-y-4 mb-6"></div>
+
+            <div id="shipping-breakdown" class="hidden border-t border-white/10 pt-4 mb-4 text-sm space-y-2">
+                <div class="flex justify-between">
+                    <span>Products Subtotal</span>
+                    <span id="products-subtotal">$0.00</span>
+                </div>
+                <div id="shipping-row" class="flex justify-between text-purple-300">
+                    <span id="shipping-label">Shipping &amp; Packaging (Ontario)</span>
+                    <span id="shipping-fee">$0.00</span>
+                </div>
+            </div>
+
+            <div class="border-t border-white/10 pt-4">
+                <div class="flex justify-between text-xl font-semibold mb-6">
+                    <span>Grand Total</span>
+                    <span id="cart-total">$0.00 CAD</span>
+                </div>
+                <button type="button" onclick="checkout()"
+                        class="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-purple-100 transition-colors">
+                    Proceed to Checkout
+                </button>
+                <p class="text-xs text-white/40 text-center mt-3">Wishlist only — real unlocks: Fansly (digital) · Shopify (prints).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacy-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="privacy-title"
+         class="hidden fixed inset-0 z-[95] bg-black/85 items-center justify-center p-4 sm:p-6"
+         onclick="if (event.target.id === 'privacy-modal') closePrivacy()">
+        <div class="modal-panel w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-purple-500/40 bg-[#111114] shadow-2xl shadow-purple-900/30"
+             onclick="event.stopPropagation()">
+            <div class="sticky top-0 bg-[#111114] border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+                <h3 id="privacy-title" class="text-xl font-semibold text-gold heading-serif">Privacy Policy</h3>
+                <button type="button" onclick="closePrivacy()" class="text-3xl leading-none text-white/60 hover:text-white" aria-label="Close">&times;</button>
+            </div>
+
+            <div class="px-6 py-5 text-sm text-white/80 space-y-4 leading-relaxed">
+                <p class="text-xs text-white/50">Last updated: August 2026</p>
+
+                <p>This Privacy Policy explains how personal information is collected and used when you interact with this website and book private sessions.</p>
+
+                <p><strong class="text-gold">Who We Are</strong><br>
+                This site is operated by Solena (Monarch of the Moon), based in Ontario, Canada.</p>
+
+                <p><strong class="text-gold">Information We Collect</strong><br>
+                We may collect name and contact details, booking and session-related information, payment and deposit details (processed by third-party providers), and basic technical data for site security and performance.</p>
+
+                <p><strong class="text-gold">How We Use Your Information</strong><br>
+                We use this information to schedule and conduct private sessions, process deposits and payments, communicate about your booking, maintain records of agreements, and protect the site against misuse. We do not sell your personal information.</p>
+
+                <p><strong class="text-gold">Third-Party Services</strong><br>
+                Booking is handled through Calendly. Payments may be processed by services connected to Calendly (such as Stripe). These providers have their own privacy policies.</p>
+
+                <p><strong class="text-gold">Data Retention</strong><br>
+                We keep booking and session-related information only as long as needed for the purposes above, or as required by law. You may request deletion subject to legal or contractual obligations.</p>
+
+                <p><strong class="text-gold">Your Rights</strong><br>
+                Depending on your location, you may have the right to access, correct, or delete your personal information, and to lodge a complaint with a data protection authority.</p>
+
+                <p><strong class="text-gold">International Visitors</strong><br>
+                If you access this site from outside Canada, your information may be processed in Canada and in the countries where our service providers operate.</p>
+
+                <p><strong class="text-gold">Contact</strong><br>
+                For privacy-related questions or requests:<br>
+                <a href="mailto:mistresssolena@monarchofthemoon.shop" class="text-purple-300 hover:text-purple-200">mistresssolena@monarchofthemoon.shop</a></p>
+            </div>
+
+            <div class="px-6 pb-6">
+                <button type="button" onclick="closePrivacy()"
+                        class="w-full py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 font-semibold transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liability Waiver Modal (required before Calendly) -->
+    <div id="waiver-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="waiver-title"
+         class="hidden fixed inset-0 z-[95] bg-black/85 items-center justify-center p-4 sm:p-6"
+         onclick="if (event.target.id === 'waiver-modal') closeWaiver()">
+        <div class="modal-panel w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-purple-500/40 bg-[#111114] shadow-2xl shadow-purple-900/30"
+             onclick="event.stopPropagation()">
+            <div class="sticky top-0 bg-[#111114] border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+                <h3 id="waiver-title" class="text-xl font-semibold text-gold heading-serif">Session Agreement</h3>
+                <button type="button" onclick="closeWaiver()" class="text-3xl leading-none text-white/60 hover:text-white" aria-label="Close">&times;</button>
+            </div>
+
+            <div class="px-6 py-5 text-sm text-white/80 space-y-4 leading-relaxed">
+                <p class="text-white/90 font-medium">Please read and agree before continuing to the booking calendar.</p>
+
+                <div class="bg-black/40 border border-white/10 rounded-2xl p-4 space-y-3 text-xs sm:text-sm max-h-64 overflow-y-auto">
+                    <p><strong class="text-gold">Liability Waiver &amp; Informed Consent</strong></p>
+                    <p>These are private, intentional sessions focused on guidance, presence, reflection, and personal exploration. They are not therapy, medical treatment, or professional mental-health services. No specific outcomes are guaranteed.</p>
+                    <p>You acknowledge that sessions may involve emotionally intense or challenging material and you voluntarily assume the associated emotional and personal risks.</p>
+                    <p>To the fullest extent permitted by law, you release the Practitioner from claims arising from participation, except in cases of gross negligence or willful misconduct.</p>
+                    <p>Both parties agree to maintain confidentiality of session content except where disclosure is required by law.</p>
+                    <p>The booking calendar is for in-person sessions only. Online sessions are arranged separately. A non-refundable deposit is required at booking ($100 half hour / $200 one hour). It secures your time and is applied toward the session fee ($225 / $450). The remaining balance is due in cash in person once the booking is honored. Cancellations or reschedules with less than 48 hours’ notice, and no-shows, result in forfeiture of the deposit. Unpaid cash balance means the session does not proceed.</p>
+                    <p>You confirm you are at least 18 years of age, of sound mind, and legally able to enter this agreement. This agreement is governed by the laws of the Province of Ontario, Canada.</p>
+                </div>
+
+                <label class="flex items-start gap-3 cursor-pointer select-none">
+                    <input type="checkbox" id="waiver-agree" class="mt-1 h-4 w-4 rounded border-white/30 bg-transparent accent-purple-600 shrink-0">
+                    <span class="text-sm text-white/90 leading-snug">
+                        I am 18+, I have read the Session Agreement above, and I agree to its terms, including the non-refundable deposit policy.
+                    </span>
+                </label>
+            </div>
+
+            <div class="px-6 pb-6 flex flex-col sm:flex-row gap-3">
+                <button type="button" onclick="closeWaiver()"
+                        class="flex-1 py-3.5 rounded-2xl border border-white/25 hover:bg-white/10 font-medium transition-colors">
+                    Cancel
+                </button>
+                <button type="button" id="waiver-continue-btn" onclick="acceptWaiverAndBook()"
+                        class="flex-1 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled>
+                    I Agree — Continue to Calendar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // PRODUCTION REDIRECT LINKS
+        // ============================================================
+        // FANSLY TRACKING + REFERRAL
+        // 1. Create a Tracking Link in Fansly (Profile → Tracking Links)
+        //    Name it e.g. "Website – Monarch of the Moon"
+        // 2. Paste the full tracking URL below (replaces the profile URL)
+        // 3. Paste your Fan Referral code (Profile → Referrals) if you have one
+        //    Leave FANSLY_REFERRAL_CODE empty ("") if you don't want referral commission
+        // ============================================================
+        const FANSLY_TRACKING_URL = "https://fansly.com/MistressSolerna"; // ← paste your Tracking Link here
+        const FANSLY_REFERRAL_CODE = ""; // ← paste your referral code here (e.g. "SOLENA")
+
+        // UTM defaults for outbound tracking
+        const UTM_DEFAULTS = {
+            utm_source: "monarchofthemoon",
+            utm_medium: "website",
+            utm_campaign: "site_outbound"
+        };
+
+        function appendParams(url, params) {
+            if (!url || typeof url !== "string") return url;
+            try {
+                const u = new URL(url, window.location.origin);
+                Object.entries(params).forEach(([k, v]) => {
+                    if (v != null && String(v).trim() !== "") {
+                        u.searchParams.set(k, String(v).trim());
+                    }
+                });
+                return u.toString();
+            } catch {
+                // Fallback for relative or malformed URLs
+                const pairs = Object.entries(params)
+                    .filter(([, v]) => v != null && String(v).trim() !== "")
+                    .map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(String(v).trim()));
+                if (!pairs.length) return url;
+                const sep = url.includes("?") ? "&" : "?";
+                return url + sep + pairs.join("&");
+            }
+        }
+
+        function withUtm(url, contentLabel) {
+            return appendParams(url, {
+                ...UTM_DEFAULTS,
+                utm_content: contentLabel || "general"
+            });
+        }
+
+        function buildFanslyUrl(baseUrl, contentLabel) {
+            let url = baseUrl || FANSLY_TRACKING_URL;
+            if (FANSLY_REFERRAL_CODE && FANSLY_REFERRAL_CODE.trim()) {
+                url = appendParams(url, { r: FANSLY_REFERRAL_CODE.trim() });
+            }
+            return withUtm(url, contentLabel || "fansly");
+        }
+
+        const LINKS = {
+            fansly: buildFanslyUrl(FANSLY_TRACKING_URL, "nav_fansly"),
+            shopify: withUtm("https://monarchofthemoon.myshopify.com", "nav_shopify"),
+            calendly: withUtm("https://calendly.com/mistresssolena", "nav_calendly")
+        };
+
+        // All Vault digital products use tracking + referral + UTM
+        const FANSLY_POSTS = {
+            moonlitSecrets: buildFanslyUrl(FANSLY_TRACKING_URL, "vault_moonlit_secrets"),
+            celestialTease: buildFanslyUrl(FANSLY_TRACKING_URL, "vault_celestial_tease"),
+            lunarGlimpse: buildFanslyUrl(FANSLY_TRACKING_URL, "vault_lunar_glimpse"),
+            privateWhispers: buildFanslyUrl(FANSLY_TRACKING_URL, "vault_private_whispers"),
+            nightMotion: buildFanslyUrl(FANSLY_TRACKING_URL, "vault_night_motion"),
+            claymationRealm: buildFanslyUrl(FANSLY_TRACKING_URL, "vault_claymation_realm")
+        };
+
+        const SHOPIFY_PRODUCTS = {
+            celestialPrint: withUtm("https://monarchofthemoon.myshopify.com", "print_celestial"),
+            monarchPrint: withUtm("https://monarchofthemoon.myshopify.com", "print_monarch"),
+            canvas: withUtm("https://monarchofthemoon.myshopify.com", "print_canvas")
+        };
+        // ============================================================
+
+        function linkIsReady(url) {
+            if (!url || typeof url !== "string") return false;
+            return !url.includes("YOUR_") && !url.includes("YOUR-") && url.startsWith("http");
+        }
+
+        const WAIVER_KEY = "solena_waiver_accepted";
+
+        function hasAcceptedWaiver() {
+            try {
+                return sessionStorage.getItem(WAIVER_KEY) === "1";
+            } catch {
+                return false;
+            }
+        }
+
+        function setWaiverAccepted() {
+            try {
+                sessionStorage.setItem(WAIVER_KEY, "1");
+            } catch {}
+        }
+
+        function openWaiverModal() {
+            const modal = document.getElementById("waiver-modal");
+            const checkbox = document.getElementById("waiver-agree");
+            const btn = document.getElementById("waiver-continue-btn");
+            if (!modal) return;
+
+            if (checkbox) {
+                checkbox.checked = false;
+                checkbox.onchange = () => {
+                    if (btn) btn.disabled = !checkbox.checked;
+                };
+            }
+            if (btn) btn.disabled = true;
+
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setModalOpen(true);
+        }
+
+        function closeWaiver() {
+            const modal = document.getElementById("waiver-modal");
+            if (!modal) return;
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            setModalOpen(false);
+        }
+
+        function openPrivacy() {
+            const modal = document.getElementById("privacy-modal");
+            if (!modal) return;
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setModalOpen(true);
+        }
+
+        function closePrivacy() {
+            const modal = document.getElementById("privacy-modal");
+            if (!modal) return;
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            setModalOpen(false);
+        }
+
+        function acceptWaiverAndBook() {
+            const checkbox = document.getElementById("waiver-agree");
+            if (!checkbox || !checkbox.checked) {
+                showToast("Please confirm you agree to the terms");
+                return;
+            }
+            setWaiverAccepted();
+            closeWaiver();
+            // Proceed to Calendly
+            const url = LINKS.calendly;
+            if (linkIsReady(url)) {
+                window.open(url, "_blank", "noopener,noreferrer");
+            } else {
+                showToast("Add your Calendly URL in LINKS at the top of index.html");
+            }
+        }
+
+        function openLink(keyOrUrl) {
+            const url = LINKS[keyOrUrl] || keyOrUrl;
+            const labels = { fansly: "Fansly", shopify: "Shopify", calendly: "Calendly" };
+
+            // Intercept Calendly: require waiver first
+            if (keyOrUrl === "calendly") {
+                if (hasAcceptedWaiver()) {
+                    if (!linkIsReady(url)) {
+                        showToast(`Add your Calendly URL in LINKS at the top of index.html`);
+                        return;
+                    }
+                    window.open(url, "_blank", "noopener,noreferrer");
+                } else {
+                    openWaiverModal();
+                }
+                return;
+            }
+
+            if (!linkIsReady(url)) {
+                const name = labels[keyOrUrl] || "that service";
+                showToast(`Add your ${name} URL in LINKS at the top of index.html`);
+                return;
+            }
+            window.open(url, "_blank", "noopener,noreferrer");
+        }
+
+        function buyProduct(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            if (product.buyUrl && linkIsReady(product.buyUrl)) {
+                window.open(product.buyUrl, "_blank", "noopener,noreferrer");
+                return;
+            }
+            if (product.type === "physical") {
+                openLink("shopify");
+            } else {
+                openLink("fansly");
+            }
+        }
+
+        function wireOutboundButtons() {
+            document.querySelectorAll("[data-link]").forEach(el => {
+                el.addEventListener("click", () => openLink(el.getAttribute("data-link")));
+            });
+        }
+
+        function setupCalendly() {
+            const wrap = document.getElementById("calendly-wrap");
+            const hint = document.getElementById("calendly-setup-hint");
+            const embed = document.getElementById("calendly-embed");
+            if (!wrap || !embed) return;
+
+            if (!linkIsReady(LINKS.calendly)) {
+                wrap.classList.add("hidden");
+                if (hint) hint.classList.remove("hidden");
+                return;
+            }
+
+            if (hint) hint.classList.add("hidden");
+            wrap.classList.remove("hidden");
+            embed.setAttribute("data-url", LINKS.calendly);
+
+            if (!document.getElementById("calendly-script")) {
+                const s = document.createElement("script");
+                s.id = "calendly-script";
+                s.src = "https://assets.calendly.com/assets/external/widget.js";
+                s.async = true;
+                s.onload = () => {
+                    if (window.Calendly) {
+                        window.Calendly.initInlineWidget({
+                            url: LINKS.calendly,
+                            parentElement: embed
+                        });
+                    }
+                };
+                document.body.appendChild(s);
+            } else if (window.Calendly) {
+                window.Calendly.initInlineWidget({
+                    url: LINKS.calendly,
+                    parentElement: embed
+                });
+            }
+        }
+
+        const AGE_STORAGE_KEY = "solena_age_verified_until";
+        const AGE_REMEMBER_MS = 24 * 60 * 60 * 1000;
+
+        function isAgeVerifiedRecently() {
+            try {
+                const until = Number(localStorage.getItem(AGE_STORAGE_KEY));
+                if (!Number.isFinite(until)) return false;
+                if (Date.now() < until) return true;
+                localStorage.removeItem(AGE_STORAGE_KEY);
+                return false;
+            } catch {
+                return false;
+            }
+        }
+
+        function unlockAgeGate() {
+            const gate = document.getElementById("age-gate");
+            if (gate) gate.classList.add("hidden");
+            document.body.classList.remove("age-locked");
+        }
+
+        function showAgeGate() {
+            const gate = document.getElementById("age-gate");
+            const prompt = document.getElementById("age-gate-prompt");
+            const denied = document.getElementById("age-gate-denied");
+            if (gate) gate.classList.remove("hidden");
+            if (prompt) prompt.classList.remove("hidden");
+            if (denied) denied.classList.add("hidden");
+            document.body.classList.add("age-locked");
+        }
+
+        function confirmAge(isAdult) {
+            const prompt = document.getElementById("age-gate-prompt");
+            const denied = document.getElementById("age-gate-denied");
+
+            if (isAdult) {
+                const remember = document.getElementById("age-remember");
+                if (remember && remember.checked) {
+                    try {
+                        localStorage.setItem(AGE_STORAGE_KEY, String(Date.now() + AGE_REMEMBER_MS));
+                    } catch {}
+                } else {
+                    try { localStorage.removeItem(AGE_STORAGE_KEY); } catch {}
+                }
+                unlockAgeGate();
+                return;
+            }
+
+            try { localStorage.removeItem(AGE_STORAGE_KEY); } catch {}
+            prompt.classList.add("hidden");
+            denied.classList.remove("hidden");
+            window.setTimeout(() => {
+                window.location.replace("https://www.google.com/");
+            }, 2500);
+        }
+
+        if (isAgeVerifiedRecently()) {
+            document.body.classList.remove("age-locked");
+            const gateEarly = document.getElementById("age-gate");
+            if (gateEarly) gateEarly.classList.add("hidden");
+        }
+
+        const TEASER_MAX_SECONDS = 5;
+        const LOGO_FALLBACK = "media/photos/1779854354608.jpg";
+
+        function mediaCandidates(localPath) {
+            const list = [];
+            if (localPath) list.push(localPath);
+            list.push(LOGO_FALLBACK);
+            return list;
+        }
+
+        function bindMediaSources(img, localPath) {
+            const candidates = mediaCandidates(localPath);
+            let i = 0;
+            img.src = candidates[0];
+            img.onerror = () => {
+                i += 1;
+                if (i < candidates.length) img.src = candidates[i];
+            };
+        }
+
+        // Production Assets mapped to your media folder
+        const products = [
+            {
+                id: 1,
+                title: "Moonlit Secrets",
+                subtitle: "Video · 5s teaser only on site",
+                price: 19.99,
+                type: "digital",
+                kind: "video",
+                imageLocal: "media/photos/teaser-poster.jpg",
+                teaserLocal: "media/videos/teaser_moonlit.mp4",
+                buyUrl: FANSLY_POSTS.moonlitSecrets
+            },
+            {
+                id: 2,
+                title: "Celestial Tease",
+                subtitle: "Premium Photo Set · blurred on storefront",
+                price: 24.99,
+                type: "digital",
+                kind: "photo",
+                imageLocal: "media/photos/smartbg-1.jpg",
+                buyUrl: FANSLY_POSTS.celestialTease
+            },
+            {
+                id: 3,
+                title: "Lunar Glimpse",
+                subtitle: "Photo set · silhouette preview",
+                price: 29.99,
+                type: "digital",
+                kind: "photo",
+                imageLocal: "media/photos/mistress.jpg",
+                buyUrl: FANSLY_POSTS.lunarGlimpse
+            },
+            {
+                id: 4,
+                title: "Private Whispers",
+                subtitle: "Custom Audio · mood still",
+                price: 49.99,
+                type: "digital",
+                kind: "audio",
+                imageLocal: "media/photos/img-portrait.jpg",
+                buyUrl: FANSLY_POSTS.privateWhispers
+            },
+            {
+                id: 5,
+                title: "Night Motion Tease",
+                subtitle: "Short film · 5s preview only",
+                price: 19.99,
+                type: "digital",
+                kind: "video",
+                imageLocal: "media/photos/snapchat-portrait.jpg",
+                teaserLocal: "media/videos/teaser_night.mp4",
+                buyUrl: FANSLY_POSTS.nightMotion
+            },
+            {
+                id: 6,
+                title: "Claymation Realm",
+                subtitle: "Art still · blurred preview",
+                price: 34.99,
+                type: "digital",
+                kind: "photo",
+                imageLocal: "media/photos/claymations-solena.jpg",
+                buyUrl: FANSLY_POSTS.claymationRealm
+            },
+            {
+                id: 7,
+                title: "Celestial Tease Print",
+                subtitle: "8×10\" Signed Fine Art Print",
+                price: 89.99,
+                type: "physical",
+                kind: "physical",
+                imageLocal: "media/photos/Peachy_20260720_001342921.jpg",
+                buyUrl: SHOPIFY_PRODUCTS.celestialPrint
+            },
+            {
+                id: 8,
+                title: "Monarch Moon Print",
+                subtitle: "11×14\" Signed Fine Art Print",
+                price: 129.99,
+                type: "physical",
+                kind: "physical",
+                imageLocal: "media/photos/Snapchat-1216715097.jpg",
+                buyUrl: SHOPIFY_PRODUCTS.monarchPrint
+            },
+            {
+                id: 9,
+                title: "Limited Edition Canvas",
+                subtitle: "Signed Gallery Canvas",
+                price: 249.99,
+                type: "physical",
+                kind: "physical",
+                imageLocal: "media/photos/smartbg-2.jpg",
+                buyUrl: SHOPIFY_PRODUCTS.canvas
+            },
+            {
+                id: 10,
+                title: "Bound in Moonlight",
+                subtitle: "Photo set · rope study · blurred preview",
+                price: 27.99,
+                type: "digital",
+                kind: "photo",
+                imageLocal: "media/photos/rope-bind.jpg",
+                buyUrl: FANSLY_POSTS.moonlitSecrets
+            },
+            {
+                id: 11,
+                title: "Pink Veil",
+                subtitle: "Premium Photo · fishnet portrait",
+                price: 22.99,
+                type: "digital",
+                kind: "photo",
+                imageLocal: "media/photos/pink-fishnet.jpg",
+                buyUrl: FANSLY_POSTS.celestialTease
+            },
+            {
+                id: 12,
+                title: "Sheer Nocturne",
+                subtitle: "Photo set · black sheer · blurred on storefront",
+                price: 26.99,
+                type: "digital",
+                kind: "photo",
+                imageLocal: "media/photos/sheer-black.jpg",
+                buyUrl: FANSLY_POSTS.lunarGlimpse
+            },
+            {
+                id: 13,
+                title: "Masked & Bound",
+                subtitle: "Collage set · latex & lace mask",
+                price: 31.99,
+                type: "digital",
+                kind: "photo",
+                imageLocal: "media/photos/lace-mask-collage.jpg",
+                buyUrl: FANSLY_POSTS.privateWhispers
+            }
+        ];
+
+        const galleryItems = [
+            { local: "media/photos/mistress.jpg", label: "Mistress" },
+            { local: "media/photos/Peachy_20260720_001342921.jpg", label: "Sovereign" },
+            { local: "media/photos/Snapchat-2020508597.jpg", label: "Nocturnal" },
+            { local: "media/photos/claymations-solena.jpg", label: "Claymation" },
+            { local: "media/photos/1779854354608.jpg", label: "Moonlit" },
+            { local: "media/photos/smartbg-1.jpg", label: "Shadows" },
+            { local: "media/photos/img-portrait.jpg", label: "Portrait" },
+            { local: "media/photos/Snapchat-1216715097.jpg", label: "Celestial" },
+            { local: "media/photos/sheer-black.jpg", label: "Sheer" },
+            { local: "media/photos/pink-fishnet.jpg", label: "Veil" },
+            { local: "media/photos/rope-bind.jpg", label: "Bound" },
+            { local: "media/photos/lace-mask-collage.jpg", label: "Masked" }
+        ];
+
+        const CART_KEY = "solena_cart_v1";
+        const SHIPPING_FEE = 12.99;
+        let cart = loadCart();
+
+        function loadCart() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(CART_KEY));
+                if (!Array.isArray(raw)) return [];
+                return raw
+                    .filter(item => item && Number.isFinite(item.id) && Number.isFinite(item.quantity) && item.quantity > 0)
+                    .map(item => {
+                        const catalog = products.find(p => p.id === item.id);
+                        if (catalog) return { ...catalog, quantity: Math.floor(item.quantity) };
+                        return {
+                            id: item.id,
+                            title: String(item.title || "Item"),
+                            subtitle: String(item.subtitle || ""),
+                            price: Number(item.price) || 0,
+                            type: item.type === "physical" ? "physical" : "digital",
+                            image: item.image || "",
+                            quantity: Math.floor(item.quantity)
+                        };
+                    });
+            } catch { return []; }
+        }
+
+        function saveCart() { localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+        function money(amount) { return `$${Number(amount).toFixed(2)}`; }
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function updateCartCount() {
+            const countEl = document.getElementById("cart-count");
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            countEl.textContent = String(totalItems);
+            countEl.style.display = totalItems > 0 ? "flex" : "none";
+        }
+
+        function productsSubtotal() { return cart.reduce((sum, item) => sum + item.price * item.quantity, 0); }
+        function calculateShipping() { return cart.some(item => item.type === "physical") ? SHIPPING_FEE : 0; }
+        function grandTotal() { return productsSubtotal() + calculateShipping(); }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            const existing = cart.find(item => item.id === productId);
+            if (existing) existing.quantity += 1;
+            else cart.push({ ...product, quantity: 1 });
+            saveCart();
+            updateCartCount();
+            showToast(`${product.title} added to vault`);
+        }
+
+        function removeFromCart(index) {
+            if (index < 0 || index >= cart.length) return;
+            cart.splice(index, 1);
+            saveCart();
+            updateCartCount();
+            showCart();
+        }
+
+        function changeQuantity(index, change) {
+            if (index < 0 || index >= cart.length) return;
+            cart[index].quantity += change;
+            if (cart[index].quantity < 1) cart.splice(index, 1);
+            saveCart();
+            updateCartCount();
+            showCart();
+        }
+
+        function setModalOpen(isOpen) { document.body.classList.toggle("modal-open", isOpen); }
+
+        function showCart() {
+            const modal = document.getElementById("cart-modal");
+            const itemsContainer = document.getElementById("cart-items");
+            const totalEl = document.getElementById("cart-total");
+            const breakdown = document.getElementById("shipping-breakdown");
+            const subtotalEl = document.getElementById("products-subtotal");
+            const shippingEl = document.getElementById("shipping-fee");
+            const shippingLabel = document.getElementById("shipping-label");
+
+            itemsContainer.innerHTML = "";
+
+            if (cart.length === 0) {
+                itemsContainer.innerHTML = `<div class="text-center py-10 text-white/60">Your vault is empty</div>`;
+                breakdown.classList.add("hidden");
+                totalEl.textContent = "$0.00 CAD";
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+                setModalOpen(true);
+                return;
+            }
+
+            cart.forEach((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                itemsContainer.innerHTML += `
+                    <div class="flex gap-4 border-b border-white/10 pb-4">
+                        <div class="flex-1">
+                            <div class="font-medium text-gold">${escapeHtml(item.title)}</div>
+                            <div class="text-sm text-purple-300">${escapeHtml(item.subtitle)}</div>
+                            <div class="flex items-center gap-x-3 mt-2 text-sm">
+                                <button type="button" onclick="changeQuantity(${index}, -1)" class="w-7 h-7 border border-white/30 rounded hover:bg-white/10">-</button>
+                                <span>${item.quantity}</span>
+                                <button type="button" onclick="changeQuantity(${index}, 1)" class="w-7 h-7 border border-white/30 rounded hover:bg-white/10">+</button>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold">${money(itemTotal)}</div>
+                            <button type="button" onclick="removeFromCart(${index})" class="text-xs text-red-400 hover:text-red-300 mt-1">Remove</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const shipping = calculateShipping();
+            subtotalEl.textContent = money(productsSubtotal());
+            shippingEl.textContent = shipping > 0 ? money(shipping) : "Free";
+            shippingLabel.textContent = shipping > 0 ? "Shipping & Packaging (Ontario)" : "Digital delivery";
+            totalEl.textContent = `${money(grandTotal())} CAD`;
+
+            breakdown.classList.remove("hidden");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setModalOpen(true);
+        }
+
+        function hideCart() {
+            const modal = document.getElementById("cart-modal");
+            modal.classList.remove("flex");
+            modal.classList.add("hidden");
+            setModalOpen(false);
+        }
+
+        function checkout() {
+            if (cart.length === 0) { showToast("Your vault is empty"); return; }
+            const total = grandTotal();
+            const shipping = calculateShipping();
+            hideCart();
+
+            const modal = document.createElement("div");
+            modal.className = "fixed inset-0 bg-black/80 z-[95] flex items-center justify-center p-6";
+            modal.setAttribute("data-checkout-overlay", "true");
+            modal.setAttribute("role", "dialog");
+            modal.setAttribute("aria-modal", "true");
+            modal.onclick = (e) => { if (e.target === modal) { modal.remove(); setModalOpen(false); } };
+            modal.innerHTML = `
+                <div class="modal-panel bg-[#111114] max-w-md w-full rounded-3xl p-8 text-center border border-white/10">
+                    <i class="fas fa-check-circle text-6xl text-green-400 mb-6" aria-hidden="true"></i>
+                    <h3 class="text-3xl font-semibold mb-3 text-gold">Thank You, Devotee</h3>
+                    <p class="text-white/70 mb-2">Your demo order of ${money(total)} CAD has been noted.</p>
+                    <p class="text-xs text-white/50 mb-6">${shipping > 0 ? "Shipping & packaging from Ontario included." : "Digital items — instant delivery."}</p>
+                    <p class="text-xs text-amber-300/80 mb-6">Demo only — payment portals are not connected.</p>
+                    <button type="button" onclick="completeCheckout(this)" class="w-full py-4 bg-purple-600 hover:bg-purple-700 font-semibold rounded-2xl">Return to The Realm</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            setModalOpen(true);
+        }
+
+        function completeCheckout(element) {
+            cart = []; saveCart(); updateCartCount();
+            const overlay = element.closest("[data-checkout-overlay]");
+            if (overlay) overlay.remove();
+            setModalOpen(false);
+            showToast("Order simulated successfully!");
+        }
+
+        function showToast(msg) {
+            const existing = document.querySelector(".solena-toast");
+            if (existing) existing.remove();
+            const toast = document.createElement("div");
+            toast.className = "solena-toast fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#1a1428] border border-purple-700 px-6 py-3 rounded-2xl z-[80] shadow-lg text-gold";
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2200);
+        }
+
+        function kindBadge(product) {
+            if (product.kind === "video") return `<i class="fas fa-play" aria-hidden="true"></i> <span>5s teaser</span>`;
+            if (product.kind === "photo") return `<i class="fas fa-lock" aria-hidden="true"></i> <span>Blurred set</span>`;
+            if (product.kind === "audio") return `<i class="fas fa-headphones" aria-hidden="true"></i> <span>Audio</span>`;
+            return product.type === "digital" ? `<i class="fas fa-download" aria-hidden="true"></i> <span>Instant</span>` : `<i class="fas fa-shipping-fast" aria-hidden="true"></i> <span>Ships from ON</span>`;
+        }
+
+        function renderProducts() {
+            const container = document.getElementById("products-container");
+            container.innerHTML = "";
+            products.forEach(product => {
+                const card = document.createElement("div");
+                card.className = "product-card bg-[#111114] border border-white/10 rounded-3xl overflow-hidden flex flex-col";
+                const isVideo = product.kind === "video";
+                const previewBtn = isVideo ? `<button type="button" onclick="openTeaser(${product.id})" class="w-full py-3 mb-2 border border-[#dfb75c]/40 hover:bg-purple-600/20 rounded-2xl font-medium text-sm text-gold"><i class="fas fa-play-circle mr-1" aria-hidden="true"></i> Watch ${TEASER_MAX_SECONDS}s preview</button>` : "";
+
+                card.innerHTML = `
+                    <div class="media-frame relative h-56">
+                        <img class="media-blur w-full h-full object-cover" alt="${escapeHtml(product.title)} — preview" loading="lazy" data-product-img="${product.id}">
+                        <div class="absolute top-3 right-3 z-10 px-3 py-1 bg-black/70 rounded-full text-xs font-medium flex items-center gap-x-1.5 text-gold">
+                            ${kindBadge(product)}
+                        </div>
+                        <div class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                            <span class="lock-badge flex items-center gap-2 text-sm font-medium text-white/90 bg-black/55 border border-white/20 px-4 py-2 rounded-full">
+                                <i class="fas fa-eye-slash" aria-hidden="true"></i>
+                                ${isVideo ? "Preview locked to teaser" : "Silhouette preview"}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div>
+                            <h4 class="font-semibold text-xl text-gold">${escapeHtml(product.title)}</h4>
+                            <p class="text-purple-300 text-sm">${escapeHtml(product.subtitle)}</p>
+                        </div>
+                        <div class="mt-auto pt-6">
+                            <div class="mb-4">
+                                <span class="text-3xl font-semibold text-gold">${money(product.price)}</span>
+                                <span class="text-sm text-white/60"> CAD</span>
+                            </div>
+                            ${previewBtn}
+                            <button type="button" onclick="buyProduct(${product.id})" class="w-full py-3.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 transition-colors rounded-2xl font-semibold">
+                                ${product.type === "physical" ? `<i class="fas fa-shopping-bag mr-1" aria-hidden="true"></i> Buy print on Shopify` : `<i class="fas fa-lock-open mr-1" aria-hidden="true"></i> Unlock on Fansly`}
+                            </button>
+                            <button type="button" onclick="addToCart(${product.id})" class="w-full mt-2 py-2 text-xs text-white/45 hover:text-white/70 transition-colors">
+                                Save to wishlist (demo)
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+                const img = card.querySelector(`[data-product-img="${product.id}"]`);
+                if (img) bindMediaSources(img, product.imageLocal);
+            });
+        }
+
+        function renderGallery() {
+            const grid = document.getElementById("gallery-grid");
+            if (!grid) return;
+            grid.innerHTML = "";
+            galleryItems.forEach((item, index) => {
+                const cell = document.createElement("div");
+                cell.className = "media-frame aspect-square rounded-2xl border border-white/10";
+                cell.innerHTML = `
+                    <img class="media-blur w-full h-full object-cover" alt="Gallery preview" loading="lazy" data-gallery-img="${index}">
+                    <div class="absolute inset-0 z-10 flex items-end justify-center p-3 pointer-events-none">
+                        <span class="lock-badge text-[10px] uppercase tracking-wider text-white/75 bg-black/50 border border-white/15 px-2 py-1 rounded-full">
+                            ${escapeHtml(item.label)} · locked
+                        </span>
+                    </div>
+                `;
+                grid.appendChild(cell);
+                const img = cell.querySelector(`[data-gallery-img="${index}"]`);
+                if (img) bindMediaSources(img, item.local);
+            });
+
+            document.querySelectorAll("img[data-local]").forEach(img => {
+                bindMediaSources(img, img.getAttribute("data-local"));
+            });
+        }
+
+        let teaserProductId = null;
+        let teaserTimeHandler = null;
+
+        function openTeaser(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product || product.kind !== "video") return;
+
+            teaserProductId = productId;
+            const modal = document.getElementById("teaser-modal");
+            const video = document.getElementById("teaser-video");
+            const fallback = document.getElementById("teaser-fallback");
+            const title = document.getElementById("teaser-title");
+            const addBtn = document.getElementById("teaser-add-btn");
+
+            title.textContent = product.title;
+            addBtn.textContent = "Unlock full video on Fansly";
+            addBtn.onclick = () => { closeTeaser(); buyProduct(product.id); };
+
+            fallback.classList.add("hidden");
+            video.classList.remove("hidden");
+            video.removeAttribute("src");
+            
+            if (product.teaserLocal) {
+                video.src = product.teaserLocal;
+                video.load();
+            } else {
+                video.classList.add("hidden");
+                fallback.classList.remove("hidden");
+            }
+
+            video.onloadeddata = () => {
+                fallback.classList.add("hidden");
+                video.classList.remove("hidden");
+                video.currentTime = 0;
+                video.play().catch(() => {});
+            };
+
+            if (teaserTimeHandler) video.removeEventListener("timeupdate", teaserTimeHandler);
+            teaserTimeHandler = () => {
+                if (video.currentTime >= TEASER_MAX_SECONDS) {
+                    video.pause();
+                    video.currentTime = TEASER_MAX_SECONDS;
+                    showToast(`Preview ended — unlock full content in The Vault`);
+                }
+            };
+            video.addEventListener("timeupdate", teaserTimeHandler);
+
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setModalOpen(true);
+        }
+
+        function closeTeaser() {
+            const modal = document.getElementById("teaser-modal");
+            const video = document.getElementById("teaser-video");
+            if (video) {
+                video.pause();
+                video.removeAttribute("src");
+                video.load();
+                if (teaserTimeHandler) video.removeEventListener("timeupdate", teaserTimeHandler);
+            }
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            setModalOpen(false);
+            teaserProductId = null;
+        }
+
+        function toggleMobileMenu(force) {
+            const menu = document.getElementById("mobile-menu");
+            const btn = document.getElementById("mobile-menu-btn");
+            const open = typeof force === "boolean" ? force : menu.classList.contains("hidden");
+            menu.classList.toggle("hidden", !open);
+            btn.setAttribute("aria-expanded", open ? "true" : "false");
+            btn.innerHTML = open ? '<i class="fas fa-times text-2xl" aria-hidden="true"></i>' : '<i class="fas fa-bars text-2xl" aria-hidden="true"></i>';
+        }
+
+        function initialize() {
+            document.getElementById("year").textContent = String(new Date().getFullYear());
+            renderProducts();
+            renderGallery();
+            updateCartCount();
+            wireOutboundButtons();
+            setupCalendly();
+
+            if (isAgeVerifiedRecently()) unlockAgeGate();
+            else showAgeGate();
+
+            document.addEventListener("keydown", (e) => {
+                if (document.body.classList.contains("age-locked")) {
+                    if (e.key === "Escape") e.preventDefault();
+                    return;
+                }
+                if (e.key !== "Escape") return;
+                closePrivacy();
+                closeWaiver();
+                closeTeaser();
+                const checkoutOverlay = document.querySelector("[data-checkout-overlay]");
+                if (checkoutOverlay) { checkoutOverlay.remove(); setModalOpen(false); return; }
+                hideCart();
+                toggleMobileMenu(false);
+            });
+        }
+
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize);
+        else initialize();
+
+        // ===== Cookie Consent =====
+        const COOKIE_KEY = "solena_cookie_consent";
+
+        function getCookieConsent() {
+            try {
+                return localStorage.getItem(COOKIE_KEY);
+            } catch {
+                return null;
+            }
+        }
+
+        function setCookieConsent(value) {
+            try {
+                localStorage.setItem(COOKIE_KEY, value);
+            } catch {}
+        }
+
+        function showCookieBanner() {
+            const banner = document.getElementById("cookie-banner");
+            if (banner && !getCookieConsent()) {
+                banner.classList.remove("hidden");
+            }
+        }
+
+        function acceptCookies() {
+            setCookieConsent("accepted");
+            hideCookieBanner();
+        }
+
+        function declineCookies() {
+            setCookieConsent("essential");
+            hideCookieBanner();
+        }
+
+        function hideCookieBanner() {
+            const banner = document.getElementById("cookie-banner");
+            if (banner) banner.classList.add("hidden");
+        }
+
+        // Show banner after age gate is handled
+        document.addEventListener("DOMContentLoaded", () => {
+            // Small delay so it appears after age gate interaction
+            setTimeout(showCookieBanner, 800);
+        });
+        if (document.readyState !== "loading") {
+            setTimeout(showCookieBanner, 800);
+        }
+    </script>
+
+    <!-- Cookie Consent Banner -->
+    <div id="cookie-banner"
+         class="hidden fixed bottom-0 left-0 right-0 z-[180] p-4 sm:p-6">
+        <div class="max-w-3xl mx-auto rounded-2xl border border-purple-500/30 bg-[#111114]/95 backdrop-blur-md shadow-2xl shadow-purple-900/20 px-5 py-4 sm:px-6 sm:py-5">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div class="flex-1 text-sm text-white/80 leading-relaxed">
+                    <p class="font-medium text-gold mb-1">Cookies &amp; Privacy</p>
+                    <p class="text-white/70 text-xs sm:text-sm">
+                        We use essential cookies to make the site work and optional cookies for performance. 
+                        See our <button type="button" onclick="openPrivacy()" class="text-purple-300 hover:text-purple-200 underline underline-offset-2">Privacy Policy</button>.
+                    </p>
+                </div>
+                <div class="flex gap-2 shrink-0">
+                    <button type="button" onclick="declineCookies()"
+                            class="px-4 py-2.5 rounded-xl border border-white/20 hover:bg-white/10 text-sm font-medium transition-colors">
+                        Essential only
+                    </button>
+                    <button type="button" onclick="acceptCookies()"
+                            class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-sm font-semibold transition-colors">
+                        Accept all
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
