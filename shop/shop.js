@@ -30,6 +30,7 @@ function toast(msg) {
 }
 const fromPrice = p => Math.min(...p.variants.map(v => v.price));
 const shipsLabel = p => p.shipsTo.length === 2 ? 'Ships to Canada & USA' : 'Ships to USA only';
+const shipsTag = p => p.shipsTo.length === 2 ? 'Canada & USA' : 'USA only';
 
 // ---------- grid ----------
 async function renderGrid() {
@@ -39,7 +40,7 @@ async function renderGrid() {
       <div class="ph"><img src="${esc(p.images[p.variants[0].image] || p.images[0])}" alt="${esc(p.title)}" loading="lazy" width="400" height="400"></div>
       <div class="info"><h2 class="serif">${esc(p.title)}</h2>
         <div class="price">${p.variants.length > 1 && new Set(p.variants.map(v => v.price)).size > 1 ? 'From ' : ''}${money(fromPrice(p))}</div>
-        <span class="tag">${shipsLabel(p)}</span></div>
+        <span class="tag">${shipsTag(p)}</span></div>
     </a>`).join('');
 }
 
