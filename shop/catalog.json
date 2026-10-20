@@ -1,0 +1,348 @@
+{
+ "currency": "CAD",
+ "updated": "2026-10-20",
+ "shipping": {
+  "note": "Flat rate per production partner shipment, CAD cents",
+  "rates": {
+   "printful": {
+    "CA": 1095,
+    "US": 795
+   },
+   "printify-stk": {
+    "CA": 1095,
+    "US": 695
+   },
+   "printify-blk": {
+    "US": 1495
+   }
+  },
+  "days": {
+   "CA": [
+    5,
+    14
+   ],
+   "US": [
+    5,
+    14
+   ]
+  }
+ },
+ "products": [
+  {
+   "slug": "moon-key-tote",
+   "title": "Monarch of the Moon Organic Tote Bag",
+   "provider": "printful",
+   "shipGroup": "printful",
+   "sourceId": "483498186",
+   "shipsTo": [
+    "CA",
+    "US"
+   ],
+   "blurb": "A crescent moon, a golden key and amethyst crystals on a sturdy organic cotton tote.",
+   "description": [
+    "Our Monarch of the Moon crest (a golden skeleton key, crescent moon and amethyst crystals under a sky of stars) printed on a black organic cotton tote.",
+    "Roomy enough for books, groceries and market finds. Econscious EC8000, 100% organic cotton, one size.",
+    "Printed to order just for you, so nothing goes to waste."
+   ],
+   "options": [],
+   "images": [
+    "img/tote-1.jpg"
+   ],
+   "variants": [
+    {
+     "key": "tote",
+     "label": "One size",
+     "options": {},
+     "price": 3550,
+     "image": 0,
+     "fulfil": {
+      "sync_variant_id": 5585876254
+     }
+    }
+   ]
+  },
+  {
+   "slug": "tarot-sticker",
+   "title": "The Self-Made Tarot Card Sticker",
+   "provider": "printify",
+   "shipGroup": "printify-stk",
+   "sourceId": "6ad7ef1ca213b61c990d89f9",
+   "shipsTo": [
+    "CA",
+    "US"
+   ],
+   "blurb": "A tarot-inspired kiss-cut sticker: \"I create. I feel. I choose.\"",
+   "description": [
+    "\"The Self-Made\" is an original tarot-inspired card illustration with moon phases, a golden chalice, a sword and a pentacle, finished with the words \"I create. I feel. I choose.\"",
+    "Glossy kiss-cut vinyl that goes on smooth and bubble-free. Choose your size and a white or transparent backing.",
+    "Printed to order just for you."
+   ],
+   "options": [
+    "Size",
+    "Finish"
+   ],
+   "images": [
+    "img/tarot-sticker-0.jpg",
+    "img/tarot-sticker-1.jpg",
+    "img/tarot-sticker-2.jpg",
+    "img/tarot-sticker-3.jpg",
+    "img/tarot-sticker-4.jpg",
+    "img/tarot-sticker-5.jpg",
+    "img/tarot-sticker-6.jpg",
+    "img/tarot-sticker-7.jpg",
+    "img/tarot-sticker-8.jpg",
+    "img/tarot-sticker-9.jpg",
+    "img/tarot-sticker-10.jpg",
+    "img/tarot-sticker-11.jpg",
+    "img/tarot-sticker-12.jpg",
+    "img/tarot-sticker-13.jpg",
+    "img/tarot-sticker-14.jpg",
+    "img/tarot-sticker-15.jpg",
+    "img/tarot-sticker-16.jpg",
+    "img/tarot-sticker-17.jpg",
+    "img/tarot-sticker-18.jpg",
+    "img/tarot-sticker-19.jpg",
+    "img/tarot-sticker-20.jpg"
+   ],
+   "imageVariants": [
+    [
+     45747
+    ],
+    [
+     45747
+    ],
+    [
+     45747
+    ],
+    [
+     45749
+    ],
+    [
+     45749
+    ],
+    [
+     45749
+    ],
+    [
+     45750
+    ],
+    [
+     45750
+    ],
+    [
+     45750
+    ],
+    [
+     45751
+    ],
+    [
+     45751
+    ],
+    [
+     45751
+    ],
+    [
+     45752
+    ],
+    [
+     45752
+    ],
+    [
+     45752
+    ],
+    [
+     45753
+    ],
+    [
+     45753
+    ],
+    [
+     45753
+    ],
+    [
+     45754
+    ],
+    [
+     45754
+    ],
+    [
+     45754
+    ]
+   ],
+   "variants": [
+    {
+     "key": "stk-45747",
+     "label": "2\" × 2\" / Transparent",
+     "options": {
+      "Size": "2\" × 2\"",
+      "Finish": "Transparent"
+     },
+     "price": 499,
+     "image": 0,
+     "fulfil": {
+      "product_id": "6ad7ef1ca213b61c990d89f9",
+      "variant_id": 45747
+     }
+    },
+    {
+     "key": "stk-45749",
+     "label": "3\" × 3\" / Transparent",
+     "options": {
+      "Size": "3\" × 3\"",
+      "Finish": "Transparent"
+     },
+     "price": 499,
+     "image": 3,
+     "fulfil": {
+      "product_id": "6ad7ef1ca213b61c990d89f9",
+      "variant_id": 45749
+     }
+    },
+    {
+     "key": "stk-45750",
+     "label": "3\" × 3\" / White",
+     "options": {
+      "Size": "3\" × 3\"",
+      "Finish": "White"
+     },
+     "price": 499,
+     "image": 6,
+     "fulfil": {
+      "product_id": "6ad7ef1ca213b61c990d89f9",
+      "variant_id": 45750
+     }
+    },
+    {
+     "key": "stk-45751",
+     "label": "4\" × 4\" / Transparent",
+     "options": {
+      "Size": "4\" × 4\"",
+      "Finish": "Transparent"
+     },
+     "price": 599,
+     "image": 9,
+     "fulfil": {
+      "product_id": "6ad7ef1ca213b61c990d89f9",
+      "variant_id": 45751
+     }
+    },
+    {
+     "key": "stk-45752",
+     "label": "4\" × 4\" / White",
+     "options": {
+      "Size": "4\" × 4\"",
+      "Finish": "White"
+     },
+     "price": 499,
+     "image": 12,
+     "fulfil": {
+      "product_id": "6ad7ef1ca213b61c990d89f9",
+      "variant_id": 45752
+     }
+    },
+    {
+     "key": "stk-45753",
+     "label": "6\" × 6\" / Transparent",
+     "options": {
+      "Size": "6\" × 6\"",
+      "Finish": "Transparent"
+     },
+     "price": 599,
+     "image": 15,
+     "fulfil": {
+      "product_id": "6ad7ef1ca213b61c990d89f9",
+      "variant_id": 45753
+     }
+    },
+    {
+     "key": "stk-45754",
+     "label": "6\" × 6\" / White",
+     "options": {
+      "Size": "6\" × 6\"",
+      "Finish": "White"
+     },
+     "price": 799,
+     "image": 18,
+     "fulfil": {
+      "product_id": "6ad7ef1ca213b61c990d89f9",
+      "variant_id": 45754
+     }
+    }
+   ]
+  },
+  {
+   "slug": "self-made-blanket",
+   "title": "The Self-Made III Woven Blanket",
+   "provider": "printify",
+   "shipGroup": "printify-blk",
+   "sourceId": "6ad7ef1ba213b61c990d89f7",
+   "shipsTo": [
+    "US"
+   ],
+   "blurb": "Our tarot-inspired \"Self-Made\" artwork woven into a cozy cotton throw.",
+   "description": [
+    "Wrap yourself in celestial energy. \"The Self-Made\" tarot-inspired artwork, woven into a 52\" × 37\" throw with colourful fringed edges.",
+    "100% cotton, woven threads. \"Artwork\" weave is best for illustrated detail; \"Photo\" weave gives softer colour blending. Woven products show the design in thread, so colours read softer than the mockup.",
+    "Made to order. Currently ships to the United States only."
+   ],
+   "options": [
+    "Weave",
+    "Size"
+   ],
+   "images": [
+    "img/self-made-blanket-0.jpg",
+    "img/self-made-blanket-1.jpg",
+    "img/self-made-blanket-2.jpg",
+    "img/self-made-blanket-3.jpg"
+   ],
+   "imageVariants": [
+    [
+     112794,
+     112797
+    ],
+    [
+     112794,
+     112797
+    ],
+    [
+     112794,
+     112797
+    ],
+    [
+     112794,
+     112797
+    ]
+   ],
+   "variants": [
+    {
+     "key": "blk-112794",
+     "label": "Artwork / 52\" × 37\"",
+     "options": {
+      "Weave": "Artwork",
+      "Size": "52\" × 37\""
+     },
+     "price": 4899,
+     "image": 0,
+     "fulfil": {
+      "product_id": "6ad7ef1ba213b61c990d89f7",
+      "variant_id": 112794
+     }
+    },
+    {
+     "key": "blk-112797",
+     "label": "Photo / 52\" × 37\"",
+     "options": {
+      "Weave": "Photo",
+      "Size": "52\" × 37\""
+     },
+     "price": 4899,
+     "image": 0,
+     "fulfil": {
+      "product_id": "6ad7ef1ba213b61c990d89f7",
+      "variant_id": 112797
+     }
+    }
+   ]
+  }
+ ]
+}
