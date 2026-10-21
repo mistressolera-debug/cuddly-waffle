@@ -119,7 +119,7 @@ async function renderProduct() {
 function shippingFor(lines, country) {
   // Same rule as the server: one flat charge per shipment, highest item rate in that shipment.
   const groups = {};
-  for (const l of lines) { const r = l.p.ship[country]; if (r === undefined) return null; groups[l.p.shipGroup] = Math.max(groups[l.p.shipGroup] || 0, r); }
+  for (const l of lines) { const r = (l.v.ship && l.v.ship[country]) ?? l.p.ship[country]; if (r === undefined) return null; groups[l.p.shipGroup] = Math.max(groups[l.p.shipGroup] || 0, r); }
   return Object.values(groups).reduce((a, b) => a + b, 0);
 }
 async function renderCart() {

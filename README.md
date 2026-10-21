@@ -8,6 +8,8 @@ Static site for [monarchofthemoon.shop](https://monarchofthemoon.shop), the Mona
   - Products, prices, photos and options come live from `https://api.monarchofthemoon.shop/catalog` (no product files to edit).
 - `worker/`: Cloudflare Worker `motm-shop` at https://api.monarchofthemoon.shop
   - `GET /catalog`: live catalog built from Printify shop 29406700 + Printful store 18926641 (published, enabled, available variants only; duplicates collapsed). Rebuilt by a cron every 5 minutes and kept in private R2 (`motm-shop-orders/catalog/`). If a provider API is down, its last good copy is used.
+  - `POST /printify-webhook`: Printify shop webhooks (publish started, product created/updated/deleted), verified with the `X-Pfy-Signature` HMAC. On "publish started" it confirms the publish to Printify (`publishing_succeeded`, handle = the product's page on this shop) so the product unlocks, then refreshes the catalog.
+  - `POST /printful-webhook?token=...`: Printful store webhooks (product synced/updated/deleted) -> catalog refresh.
   - `GET|POST /catalog/refresh`: owner-only instant rebuild (`Authorization: Bearer <CATALOG_REFRESH_TOKEN>` or `?key=<token>`); returns what is showing and what is hidden.
   - `POST /checkout`: re-prices the cart from the live catalog (client prices are ignored) and opens a Stripe Checkout Session (CAD, CA or US shipping address, phone, flat-rate shipping)
   - `POST /stripe-webhook`: verifies the Stripe signature; on `checkout.session.completed` creates the Printful and Printify orders. Idempotent per Checkout Session (records in R2 `orders/`).

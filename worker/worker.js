@@ -1,6 +1,7 @@
 // motm-shop: live catalog + checkout + order routing for monarchofthemoon.shop
 // Secrets (set via Cloudflare API, never in code): STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
-//   PRINTFUL_API_TOKEN, PRINTIFY_API_TOKEN, CATALOG_REFRESH_TOKEN, BLOCKED_TERMS (comma list of words never shown).
+//   PRINTFUL_API_TOKEN, PRINTIFY_API_TOKEN, CATALOG_REFRESH_TOKEN, BLOCKED_TERMS (comma list of words never shown),
+//   PRINTIFY_WEBHOOK_SECRET (HMAC key for Printify webhooks), PRINTFUL_WEBHOOK_TOKEN (URL token for Printful webhooks).
 // Vars: MODE ("test" | "live").  Binding: ORDERS (private R2 bucket motm-shop-orders): order records + catalog snapshots.
 import { fetchPrintify, fetchPrintful, makeCleaner, assemble, PRINTFUL_STORE_ID, PRINTIFY_SHOP_ID } from './catalog-build.js';
 
@@ -19,8 +20,10 @@ let mem = null, building = null;
 async function readR2(env, k) { const o = await env.ORDERS.get(k); return o ? o.json() : null; }
 async function writeR2(env, k, v) { await env.ORDERS.put(k, JSON.stringify(v), { httpMetadata: { contentType: 'application/json' } }); }
 
+let again = false;
 async function rebuild(env) {
-  if (building) return building;
+  // If a change arrives while a rebuild is running, run one more afterwards so the change isn't missed.
+  if (building) { again = true; return building.then(() => (again ? (again = false, rebuild(env)) : mem)); }
   building = (async () => {
     const clean = makeCleaner(env.BLOCKED_TERMS || '');
     const sources = {};
@@ -120,7 +123,7 @@ function priceCart(cat, items, country) {
     if (!p.shipsTo.includes(country)) throw new Error(`${p.title} does not ship to ${country === 'CA' ? 'Canada' : 'the United States'} yet.`);
     lines.push({ key, qty: merged[key], p, v });
     // one flat charge per shipment (production partner); the highest item rate in that shipment applies
-    groups[p.shipGroup] = Math.max(groups[p.shipGroup] || 0, p.ship[country]);
+    groups[p.shipGroup] = Math.max(groups[p.shipGroup] || 0, (v.ship && v.ship[country]) ?? p.ship[country]);
   }
   const shipping = Object.values(groups).reduce((a, b) => a + b, 0);
   return { lines, shipping };
@@ -315,6 +318,56 @@ async function printifyOrder(env, sessionId, ship, lines, live) {
   return { id: d.id, sent_to_production: live };
 }
 
+// ---------- provider webhooks (instant catalog refresh + Printify publish handshake) ----------
+const productUrl = id => `${SHOP}product.html?p=${encodeURIComponent(id)}`;
+function hexEq(a, b) { return a.length === b.length && crypto.subtle.timingSafeEqual(enc.encode(a), enc.encode(b)); }
+async function hmacHex(secret, body) {
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return [...new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(body)))].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function printify(env, method, path, body) {
+  const r = await fetch(`https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/${path}`, { method,
+    headers: { Authorization: 'Bearer ' + env.PRINTIFY_API_TOKEN, 'Content-Type': 'application/json', 'User-Agent': 'motm-shop' },
+    body: body ? JSON.stringify(body) : undefined });
+  const t = await r.text(); if (!r.ok) throw new Error(`Printify ${r.status} ${t.slice(0, 200)}`);
+  return t ? JSON.parse(t) : {};
+}
+// Tell Printify the product is now live on our shop (unlocks it in Printify). Hidden products are
+// still marked published; the shop simply keeps them hidden until their artwork changes.
+async function markPublished(env, productId) {
+  return printify(env, 'POST', `products/${productId}/publishing_succeeded.json`,
+    { external: { id: productId, handle: productUrl('pfy-' + productId) } });
+}
+async function printifyWebhook(req, env, ctx) {
+  const body = await req.text();
+  const sig = (req.headers.get('X-Pfy-Signature') || '').replace(/^sha256=/i, '').toLowerCase();
+  if (!env.PRINTIFY_WEBHOOK_SECRET || !sig || !hexEq(sig, await hmacHex(env.PRINTIFY_WEBHOOK_SECRET, body))) return new Response('bad signature', { status: 401 });
+  const ev = JSON.parse(body);
+  const pid = ev.resource && ev.resource.id;
+  const log = { at: new Date().toISOString(), type: ev.type, product: pid, action: ev.resource && ev.resource.data && ev.resource.data.action };
+  if (ev.type === 'product:publish:started' && pid && /^[a-f0-9]{24}$/.test(pid)) {
+    try {
+      if (log.action === 'delete') await printify(env, 'POST', `products/${pid}/unpublish.json`).catch(() => {});
+      else await markPublished(env, pid);
+      log.result = 'publishing_succeeded';
+    } catch (e) {
+      log.result = 'error: ' + e.message;
+      try { await printify(env, 'POST', `products/${pid}/publishing_failed.json`, { reason: 'Shop could not confirm the product. Please try Publish again.' }); } catch {}
+    }
+  }
+  ctx.waitUntil(Promise.all([rebuild(env).catch(() => {}), writeR2(env, `webhooks/printify/${Date.now()}-${ev.id || 'x'}.json`, log)]));
+  return new Response(JSON.stringify(log), { headers: { 'Content-Type': 'application/json' } });
+}
+async function printfulWebhook(req, env, ctx, url) {
+  const tok = url.searchParams.get('token') || '';
+  if (!env.PRINTFUL_WEBHOOK_TOKEN || !hexEq(tok, env.PRINTFUL_WEBHOOK_TOKEN)) return new Response('forbidden', { status: 403 });
+  let ev = {}; try { ev = await req.json(); } catch {}
+  if (ev.store && String(ev.store) !== PRINTFUL_STORE_ID) return new Response('other store, ignored');
+  const log = { at: new Date().toISOString(), type: ev.type, product: ev.data && (ev.data.sync_product && ev.data.sync_product.id) };
+  ctx.waitUntil(Promise.all([rebuild(env).catch(() => {}), writeR2(env, `webhooks/printful/${Date.now()}.json`, log)]));
+  return new Response('ok');
+}
+
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
@@ -324,6 +377,8 @@ export default {
       if (url.pathname === '/catalog/refresh' && ['GET', 'POST'].includes(req.method)) return await refreshEndpoint(req, env, url);
       if (req.method === 'POST' && url.pathname === '/checkout') return await checkout(req, env, ctx);
       if (req.method === 'POST' && url.pathname === '/stripe-webhook') return await webhook(req, env);
+      if (req.method === 'POST' && url.pathname === '/printify-webhook') return await printifyWebhook(req, env, ctx);
+      if (req.method === 'POST' && url.pathname === '/printful-webhook') return await printfulWebhook(req, env, ctx, url);
       if (req.method === 'GET' && url.pathname === '/order') return await orderStatus(req, env, url);
       if (req.method === 'GET' && url.pathname === '/health') return json(req, { ok: true, mode: env.MODE, ready: keyModeOk(env) && !!env.STRIPE_WEBHOOK_SECRET });
       return json(req, { error: 'Not found' }, 404);

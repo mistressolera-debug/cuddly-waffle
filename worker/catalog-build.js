@@ -40,8 +40,15 @@ export function makeCleaner(termList) {
     if (strip) t = t.replace(strip, ' ');
     t = t.replace(/\b(edition)\b/gi, m => m).replace(/\s+/g, ' ')
       .replace(/\s*([,|–—:-]\s*)+$/g, '').replace(/^\s*([,|–—:-]\s*)+/g, '').replace(/\s*,\s*,/g, ',').trim();
-    if (t.length > 44 && t.includes(',')) t = t.split(',')[0].trim();       // drop SEO tails
-    t = t.replace(/^["“](.+?)["”]\s*/, '$1 ').replace(/\s+/g, ' ').trim();
+    if (t.length > 44 && t.includes(',')) {                                  // drop SEO tails
+      const seg = t.split(',').map(x => x.trim()).filter(Boolean); t = seg.shift();
+      while (t.length < 20 && seg.length) t += ', ' + seg.shift();
+    }
+    t = t.replace(/^["“](.+?)["”]\s*/, '$1 ')
+      .replace(/(\w)["”](?=\w)/g, '$1 ')                    // stray closing quote glued to a word
+      .replace(/^\s*M\s*[.,]\s*S\b\.?\s*/i, '')               // leading initials prefix ("M.S", "M,S")
+      .replace(/\s+/g, ' ').trim();
+    if ((t.match(/["“”]/g) || []).length % 2) t = t.replace(/["“”]/g, '').trim();
     return t;
   }
   function description(html) {
@@ -84,7 +91,9 @@ export async function fetchPrintify(env, clean) {
     const art = [...new Set(p.print_areas.flatMap(pa => pa.placeholders.flatMap(ph => ph.images.map(i => i.id).filter(Boolean))))].sort();
     const ver = (await sha(art.join('|'))).slice(0, 10);
     const ids = new Set(ev.map(v => v.id));
-    const optNames = p.options.map(o => ({ Sizes: 'Size', 'Blanket Sizes': 'Size', Types: 'Finish', Colors: 'Color', Finish: 'Weave' }[o.name] || o.name));
+    const nice = n => ({ Types: 'Finish', Finish: p.blueprint_id === 1626 ? 'Weave' : 'Finish' }[n]) ||
+      (/frame/i.test(n) && /colou?r/i.test(n) ? 'Frame' : /size/i.test(n) ? 'Size' : /colou?r/i.test(n) ? 'Color' : /depth/i.test(n) ? 'Depth' : n);
+    const optNames = p.options.map(o => nice(o.name)).map((n, i, a) => a.indexOf(n) === i ? n : p.options[i].name);
     const vals = p.options.map(o => Object.fromEntries(o.values.map(v => [v.id, String(v.title).replace(/''/g, '"')])));
     const key = v => `pfy.${p.id}.${v}`;
     const images = [], imageVariants = [], vimg = {};
@@ -98,24 +107,34 @@ export async function fetchPrintify(env, clean) {
       if (images.length >= 24) break;
     }
     if (!images.length) continue;
+    // option value id -> option index (variant.options is not always in the same order as product.options)
+    const owner = {}; vals.forEach((m, i) => { for (const id of Object.keys(m)) owner[id] = i; });
     const variants = ev.map(v => {
-      const options = {}; v.options.forEach((oid, i) => { if (optNames[i]) options[optNames[i]] = vals[i][oid] ?? String(oid); });
-      return { key: key(v.id), label: Object.values(options).join(' / '), options, price: v.price, image: vimg[v.id] ?? 0 };
+      const picked = []; for (const oid of v.options) if (oid in owner) picked[owner[oid]] = vals[owner[oid]][oid];
+      const options = {}; optNames.forEach((n, i) => { if (picked[i] !== undefined) options[n] = picked[i]; });
+      return { key: key(v.id), label: Object.values(options).join(' / '), options, price: v.price, image: vimg[v.id] ?? 0, id: v.id };
     });
     // Shipping: countries + cost from Printify's published profiles for this blueprint/provider.
     const prof = await shipping(p.blueprint_id, p.print_provider_id);
-    const ship = {}; const shipsTo = [];
+    // Per variant: cheapest published profile for the country (= standard shipping), else the rest-of-world one.
+    const shipsTo = [];
     for (const c of COUNTRIES) {
-      if (!prof) { ship[c] = FLAT.printify[c]; shipsTo.push(c); continue; }
-      let max = -1, all = true;
-      for (const v of ev) {
-        const mine = prof.profiles.filter(pr => pr.variant_ids.includes(v.id));
-        let costs = mine.filter(pr => pr.countries.includes(c)).map(pr => pr.first_item.cost);
-        if (!costs.length) costs = mine.filter(pr => pr.countries.includes('REST_OF_THE_WORLD')).map(pr => pr.first_item.cost);
-        if (!costs.length) { all = false; break; } max = Math.max(max, ...costs);
+      let all = true;
+      for (const v of variants) {
+        let cost = null;
+        if (prof) {
+          const mine = prof.profiles.filter(pr => pr.variant_ids.includes(v.id));
+          let costs = mine.filter(pr => pr.countries.includes(c)).map(pr => pr.first_item.cost);
+          if (!costs.length) costs = mine.filter(pr => pr.countries.includes('REST_OF_THE_WORLD')).map(pr => pr.first_item.cost);
+          if (!costs.length) { all = false; break; }
+          cost = Math.min(...costs);
+        }
+        (v.ship ||= {})[c] = cost === null ? FLAT.printify[c] : Math.max(FLAT.printify[c], toCadRate(cost));
       }
-      if (all) { shipsTo.push(c); ship[c] = Math.max(FLAT.printify[c], toCadRate(max)); }
+      if (all) shipsTo.push(c);
     }
+    for (const v of variants) { for (const c of COUNTRIES) if (!shipsTo.includes(c)) delete v.ship[c]; delete v.id; }
+    const ship = {}; for (const c of shipsTo) ship[c] = Math.min(...variants.map(v => v.ship[c]));
     if (!shipsTo.length) continue;
     out.push({ id: 'pfy-' + p.id, provider: 'printify', sourceId: p.id, rawTitle: p.title,
       title: TITLE_OVERRIDES[(await sha(p.title)).slice(0, 16)] || clean.title(p.title),
