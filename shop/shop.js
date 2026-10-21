@@ -6,7 +6,17 @@ const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let CATALOG;
 async function loadCatalog() {
-  if (!CATALOG) CATALOG = await (await fetch('catalog.json', { cache: 'no-cache' })).json();
+  // Live catalog from the shop server (rebuilt from Printify + Printful every few minutes).
+  if (!CATALOG) {
+    try {
+      const r = await fetch(API + '/catalog'); if (!r.ok) throw new Error(r.status);
+      CATALOG = await r.json();
+    } catch {
+      const el = document.querySelector('#grid, #product, #cart');
+      if (el) el.innerHTML = '<div class="center"><p class="muted">The shop could not load just now. Please refresh in a moment.</p></div>';
+      throw new Error('catalog unavailable');
+    }
+  }
   return CATALOG;
 }
 function findVariant(key) {
@@ -35,8 +45,9 @@ const shipsTag = p => p.shipsTo.length === 2 ? 'Canada & USA' : 'USA only';
 // ---------- grid ----------
 async function renderGrid() {
   await loadCatalog();
+  if (!CATALOG.products.length) { $('#grid').innerHTML = '<p class="muted center" style="grid-column:1/-1">New pieces are on their way. Check back soon.</p>'; return; }
   $('#grid').innerHTML = CATALOG.products.map(p => `
-    <a class="card" href="product.html?p=${encodeURIComponent(p.slug)}">
+    <a class="card" href="product.html?p=${encodeURIComponent(p.id)}">
       <div class="ph"><img src="${esc(p.images[p.variants[0].image] || p.images[0])}" alt="${esc(p.title)}" loading="lazy" width="400" height="400"></div>
       <div class="info"><h2 class="serif">${esc(p.title)}</h2>
         <div class="price">${p.variants.length > 1 && new Set(p.variants.map(v => v.price)).size > 1 ? 'From ' : ''}${money(fromPrice(p))}</div>
@@ -48,7 +59,7 @@ async function renderGrid() {
 async function renderProduct() {
   await loadCatalog();
   const slug = new URLSearchParams(location.search).get('p');
-  const p = CATALOG.products.find(x => x.slug === slug);
+  const p = CATALOG.products.find(x => x.id === slug);
   const root = $('#product');
   if (!p) { root.innerHTML = '<div class="center"><h1 class="serif">Item not found</h1><p><a class="gold" href="./">Back to the shop</a></p></div>'; return; }
   document.title = p.title + ' | Monarch of the Moon';
@@ -68,7 +79,7 @@ async function renderProduct() {
   const current = () => p.variants.find(v => p.options.every(o => v.options[o] === sel[o]));
   function drawImages() {
     const v = current();
-    const list = p.images.map((src, i) => ({ src, i })).filter(x => !p.imageVariants || !v || p.imageVariants[x.i].includes(v.fulfil.variant_id));
+    const list = p.images.map((src, i) => ({ src, i })).filter(x => !p.imageVariants || !v || p.imageVariants[x.i].includes(v.key));
     if (!list.some(x => x.i === imgIdx)) imgIdx = list[0].i;
     $('#mainimg').src = p.images[imgIdx]; $('#mainimg').alt = p.title + (v ? ' (' + v.label + ')' : '');
     $('#thumbs').innerHTML = list.length > 1 ? list.map(x => `<button type="button" data-i="${x.i}" aria-current="${x.i === imgIdx}" aria-label="Photo ${x.i + 1}"><img src="${esc(x.src)}" alt="" loading="lazy"></button>`).join('') : '';
@@ -106,9 +117,10 @@ async function renderProduct() {
 
 // ---------- cart ----------
 function shippingFor(lines, country) {
-  const groups = new Set(lines.map(l => l.p.shipGroup)); let s = 0;
-  for (const g of groups) { const r = CATALOG.shipping.rates[g][country]; if (r === undefined) return null; s += r; }
-  return s;
+  // Same rule as the server: one flat charge per shipment, highest item rate in that shipment.
+  const groups = {};
+  for (const l of lines) { const r = l.p.ship[country]; if (r === undefined) return null; groups[l.p.shipGroup] = Math.max(groups[l.p.shipGroup] || 0, r); }
+  return Object.values(groups).reduce((a, b) => a + b, 0);
 }
 async function renderCart() {
   await loadCatalog();

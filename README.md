@@ -4,22 +4,31 @@ Static site for [monarchofthemoon.shop](https://monarchofthemoon.shop), the Mona
 
 - `index.html`: the public "Shop launching soon" page (still the homepage)
 - `shop/`: the working store, at the unlinked, `noindex` preview URL https://monarchofthemoon.shop/shop/
-  - `catalog.json`: the product list, display titles, prices (CAD cents), variants, images and flat shipping rates.
-    The Worker uses this same file as its server-side price list, so redeploy the Worker after editing it.
-  - `img/`: product mockups from Printful / Printify
-  - `product.html?p=<slug>`, `cart.html`, `success.html`, `cancel.html`, `shop.js`, `shop.css`
+  - `product.html?p=<id>`, `cart.html`, `success.html`, `cancel.html`, `shop.js`, `shop.css`
+  - Products, prices, photos and options come live from `https://api.monarchofthemoon.shop/catalog` (no product files to edit).
 - `worker/`: Cloudflare Worker `motm-shop` at https://api.monarchofthemoon.shop
-  - `POST /checkout`: re-prices the cart from the catalog (client prices are ignored) and opens a Stripe Checkout Session (CAD, CA or US shipping address, phone, flat-rate shipping)
-  - `POST /stripe-webhook`: verifies the Stripe signature; on `checkout.session.completed` creates the Printful order (tote) and the Printify order (sticker, blanket). Idempotent per Checkout Session (records in private R2 bucket `motm-shop-orders`).
+  - `GET /catalog`: live catalog built from Printify shop 29406700 + Printful store 18926641 (published, enabled, available variants only; duplicates collapsed). Rebuilt by a cron every 5 minutes and kept in private R2 (`motm-shop-orders/catalog/`). If a provider API is down, its last good copy is used.
+  - `GET|POST /catalog/refresh`: owner-only instant rebuild (`Authorization: Bearer <CATALOG_REFRESH_TOKEN>` or `?key=<token>`); returns what is showing and what is hidden.
+  - `POST /checkout`: re-prices the cart from the live catalog (client prices are ignored) and opens a Stripe Checkout Session (CAD, CA or US shipping address, phone, flat-rate shipping)
+  - `POST /stripe-webhook`: verifies the Stripe signature; on `checkout.session.completed` creates the Printful and Printify orders. Idempotent per Checkout Session (records in R2 `orders/`).
   - `GET /order?session_id=...`: payment status for the thank-you page; `GET /health`
+  - `catalog-build.js`: provider fetch + cleanup. `review.js`: reviewed artwork that stays hidden (file ids only) and display-title tweaks.
 - `legal/`: shipping, returns, privacy, terms (to be added once the business details are filled in)
 - `CNAME`: custom domain (do not change)
 
 ## Shipping
 
-Flat rate per production partner shipment (see `shipping.rates` in `shop/catalog.json`):
-tote (Printful) CA $10.95 / US $7.95, sticker CA $10.95 / US $6.95, blanket (US only) $14.95. A cart with items from
-several partners pays each partner's rate once. The shopper picks Canada or USA in the cart; Stripe then only accepts an address in that country.
+The shopper picks Canada or USA in the cart; Stripe then only accepts an address in that country. Each production partner
+shipment is charged once, at the highest rate of the items in it:
+- Printful items: flat CA $10.95 / US $7.95.
+- Printify items: Printify's published first-item cost for that product (USD x 1.40, rounded up to .95), never below CA $10.95 / US $6.95.
+  Countries also come from Printify's shipping profiles (e.g. the woven blanket ships to the US only).
+
+## Hidden artwork
+
+`worker/review.js` lists design files that were reviewed and must not be shown. Any product using one of them is hidden.
+Uploading new artwork in Printify/Printful creates a new file, so the product appears automatically within ~5 minutes.
+Titles and descriptions are also filtered against a private word list (Worker secret `BLOCKED_TERMS`).
 
 ## Test mode vs live
 

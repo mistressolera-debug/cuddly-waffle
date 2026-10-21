@@ -9,7 +9,6 @@ API="https://api.cloudflare.com/client/v4/accounts/$ACCT"
 AUTH=(-A Mozilla -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
 # Private R2 bucket for order records / idempotency (created once).
 curl -s "${AUTH[@]}" -X POST "$API/r2/buckets" -H 'Content-Type: application/json' -d '{"name":"motm-shop-orders"}' >/dev/null || true
-{ printf "export default "; cat ../shop/catalog.json; printf ";\n"; } > catalog.js
 cat > metadata.json <<J
 {"main_module":"worker.js","compatibility_date":"2025-01-01",
  "bindings":[{"type":"r2_bucket","name":"ORDERS","bucket_name":"motm-shop-orders"},
@@ -19,8 +18,11 @@ J
 curl -s "${AUTH[@]}" -X PUT "$API/workers/scripts/motm-shop" \
   -F "metadata=@metadata.json;type=application/json" \
   -F "worker.js=@worker.js;type=application/javascript+module" \
-  -F "catalog.js=@catalog.js;type=application/javascript+module" | python3 -c 'import json,sys;d=json.load(sys.stdin);print("deploy:",d["success"],d.get("errors"))'
+  -F "catalog-build.js=@catalog-build.js;type=application/javascript+module" \
+  -F "review.js=@review.js;type=application/javascript+module" | python3 -c 'import json,sys;d=json.load(sys.stdin);print("deploy:",d["success"],d.get("errors"))'
 # Served only at the custom domain api.monarchofthemoon.shop (workers.dev URL disabled).
 curl -s "${AUTH[@]}" -X POST "$API/workers/scripts/motm-shop/subdomain" -H 'Content-Type: application/json' -d '{"enabled":false}' >/dev/null
-rm -f metadata.json catalog.js
+rm -f metadata.json
+# Rebuild the live catalog every 5 minutes.
+curl -s "${AUTH[@]}" -X PUT "$API/workers/scripts/motm-shop/schedules" -H 'Content-Type: application/json' -d '[{"cron":"*/5 * * * *"}]' | python3 -c 'import json,sys;print("cron:",json.load(sys.stdin)["success"])'
 echo "MODE=$MODE  https://api.monarchofthemoon.shop/health"
