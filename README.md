@@ -30,6 +30,7 @@ shipment is charged once, at the highest rate of the items in it:
 
 `worker/review.js` lists design files that were reviewed and must not be shown. Any product using one of them is hidden.
 Uploading new artwork in Printify/Printful creates a new file, so the product appears automatically within ~5 minutes.
+`APPROVED_ART` in the same file lists products the owner approved to show anyway (only while their artwork is unchanged).
 Titles and descriptions are also filtered against a private word list (Worker secret `BLOCKED_TERMS`).
 
 ## Test mode vs live

@@ -14,8 +14,6 @@ export const BLOCKED_ART = [
  "pfy:6aa257cc5cecb69d42150ed7",
  "pfy:6aa25e4fecba32000befb634",
  "pfy:6aa265c1d8f9cac51369dd7c",
- "pfy:6aa26650496a79fdb337cb22",
- "pfy:6aa27687e0707a4612dc1304",
  "pfy:bb74e505-ebdc-3da0-1e3f-4925e7fbd8f9",
  "pfy:d3236a32-06ad-730c-4701-ea7f1dbf1abe"
 ];
@@ -37,5 +35,12 @@ export const TITLE_OVERRIDES = {
  "21e6a9c813fa3fad": "Nocturnal Owl Sticker",
  "ca6a0bcf92c379fe": "Celestial Clear iPhone Case",
  "26170e85d22c7afb": "Celestial Clear iPhone Case",
- "9a459fdb437c8e03": "Monarch of the Moon Cotton Bodycon Dress"
+ "9a459fdb437c8e03": "Monarch of the Moon Cotton Bodycon Dress",
+ "1af6a2084a25aba8": "Monarch of the Moon Tarot Card Gothic Celestial Wall Tapestry"
+};
+// Owner-approved 2026-10-21: these products show even though their artwork is on the review list.
+// The approval covers exactly these design files; if the product's artwork changes, the normal rules apply again.
+export const APPROVED_ART = {
+ "pfy-6ad7ef1ca213b61c990d89fa": ["pfy:6aa265c1d8f9cac51369dd7c", "pfy:6aa26650496a79fdb337cb22"],
+ "pfy-6ad7ef1aa213b61c990d89f6": ["pfy:6aa27687e0707a4612dc1304"]
 };

@@ -1,12 +1,12 @@
 // Builds the live shop catalog from the Printify + Printful APIs.
 // Shared by the Worker (runtime) and local test scripts (node >= 20).
-import { BLOCKED_ART, TITLE_OVERRIDES } from './review.js';
+import { BLOCKED_ART, TITLE_OVERRIDES, APPROVED_ART } from './review.js';
 
 export const PRINTFUL_STORE_ID = '18926641';
 export const PRINTIFY_SHOP_ID = '29406700';
 // Flat shipping (CAD cents) used when a provider doesn't publish a cost, and as the minimum.
 export const FLAT = { printful: { CA: 1095, US: 795 }, printify: { CA: 1095, US: 695 } };
-const FX_USD_CAD = 1.40;            // conversion for Printify's USD shipping costs
+const FX_USD_CAD = 1.405;           // conversion for Printify's USD shipping costs
 const COUNTRIES = ['CA', 'US'];
 const blocked = new Set(BLOCKED_ART);
 
@@ -192,7 +192,8 @@ export async function fetchPrintful(env, clean) {
 export function assemble(lists, clean) {
   const hidden = [], products = [];
   for (const p of lists.flat()) {
-    if (p.art.some(a => blocked.has(a))) { hidden.push({ id: p.id, why: 'reviewed artwork shows blocked text' }); continue; }
+    const ok = APPROVED_ART[p.id] || [];
+    if (p.art.some(a => blocked.has(a) && !ok.includes(a))) { hidden.push({ id: p.id, why: 'reviewed artwork shows blocked text' }); continue; }
     if (!p.title || clean.dirty(p.title) || p.variants.some(v => clean.dirty(v.label))) { hidden.push({ id: p.id, why: 'title still has blocked words' }); continue; }
     products.push(p);
   }
