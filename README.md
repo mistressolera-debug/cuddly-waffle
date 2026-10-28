@@ -2,9 +2,8 @@
 
 Static site for [monarchofthemoon.shop](https://monarchofthemoon.shop), the Monarch of the Moon family-friendly shop, hosted on GitHub Pages (no build step).
 
-- `index.html`: the public "Shop launching soon" page (still the homepage)
-- `shop/`: the working store, at the unlinked, `noindex` preview URL https://monarchofthemoon.shop/shop/
-  - `product.html?p=<id>`, `cart.html`, `success.html`, `cancel.html`, `shop.js`, `shop.css`
+- Storefront at the site root (LIVE since 2026-10-28): `index.html` (catalog), `product.html?p=<id>`, `cart.html`, `success.html`, `cancel.html`, `shop.js`, `shop.css`, `robots.txt`, `sitemap.xml`
+- `shop/`: old preview URLs; each page just forwards to its root equivalent (query string kept)
   - Products, prices, photos and options come live from `https://api.monarchofthemoon.shop/catalog` (no product files to edit).
 - `worker/`: Cloudflare Worker `motm-shop` at https://api.monarchofthemoon.shop
   - `GET /catalog`: live catalog built from Printify shop 29406700 + Printful store 18926641 (published, enabled, available variants only; duplicates collapsed). Rebuilt by a cron every 5 minutes and kept in private R2 (`motm-shop-orders/catalog/`). If a provider API is down, its last good copy is used.
@@ -15,7 +14,7 @@ Static site for [monarchofthemoon.shop](https://monarchofthemoon.shop), the Mona
   - `POST /stripe-webhook`: verifies the Stripe signature; on `checkout.session.completed` creates the Printful and Printify orders. Idempotent per Checkout Session (records in R2 `orders/`).
   - `GET /order?session_id=...`: payment status for the thank-you page; `GET /health`
   - `catalog-build.js`: provider fetch + cleanup. `review.js`: reviewed artwork that stays hidden (file ids only) and display-title tweaks.
-- `legal/`: shipping, returns, privacy, terms (to be added once the business details are filled in)
+- `legal/`: shipping, returns, privacy, terms (linked in every footer; review wording with the owner)
 - `CNAME`: custom domain (do not change)
 
 ## Shipping
@@ -55,4 +54,4 @@ This (re)creates the Stripe webhook endpoint for that mode, stores the Stripe ke
 2. Fill in the legal pages and add them to `legal/` + footer links.
 3. Decide on sales tax (Stripe Tax or manual) and turn on Stripe email receipts.
 4. Run `worker/stripe-mode.sh live STRIPE_SECRET_KEY`.
-5. Replace the homepage (or link it) to `/shop/` and remove the `noindex` tags in `shop/*.html`.
+5. (done 2026-10-28) Homepage is the shop; noindex removed.

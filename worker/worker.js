@@ -6,7 +6,7 @@
 import { fetchPrintify, fetchPrintful, makeCleaner, assemble, PRINTFUL_STORE_ID, PRINTIFY_SHOP_ID } from './catalog-build.js';
 
 const SITE = 'https://monarchofthemoon.shop';
-const SHOP = SITE + '/shop/';
+const SHOP = SITE + '/';
 const STRIPE_VERSION = '2024-06-20';
 const MAX_QTY = 10, MAX_LINES = 20;
 const FRESH_MS = 5 * 60 * 1000;        // rebuild the catalog when older than this

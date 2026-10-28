@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /cart.html
+Disallow: /success.html
+Disallow: /cancel.html
+
+Sitemap: https://monarchofthemoon.shop/sitemap.xml

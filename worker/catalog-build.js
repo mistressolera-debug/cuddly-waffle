@@ -1,6 +1,6 @@
 // Builds the live shop catalog from the Printify + Printful APIs.
 // Shared by the Worker (runtime) and local test scripts (node >= 20).
-import { BLOCKED_ART, TITLE_OVERRIDES, APPROVED_ART } from './review.js';
+import { BLOCKED_ART, TITLE_OVERRIDES, APPROVED_ART, HIDDEN_PRODUCTS } from './review.js';
 
 export const PRINTFUL_STORE_ID = '18926641';
 export const PRINTIFY_SHOP_ID = '29406700';
@@ -192,6 +192,7 @@ export async function fetchPrintful(env, clean) {
 export function assemble(lists, clean) {
   const hidden = [], products = [];
   for (const p of lists.flat()) {
+    if (HIDDEN_PRODUCTS[p.id]) { hidden.push({ id: p.id, why: 'hidden by owner' }); continue; }
     const ok = APPROVED_ART[p.id] || [];
     if (p.art.some(a => blocked.has(a) && !ok.includes(a))) { hidden.push({ id: p.id, why: 'reviewed artwork shows blocked text' }); continue; }
     if (!p.title || clean.dirty(p.title) || p.variants.some(v => clean.dirty(v.label))) { hidden.push({ id: p.id, why: 'title still has blocked words' }); continue; }

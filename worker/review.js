@@ -44,3 +44,8 @@ export const APPROVED_ART = {
  "pfy-6ad7ef1ca213b61c990d89fa": ["pfy:6aa265c1d8f9cac51369dd7c", "pfy:6aa26650496a79fdb337cb22"],
  "pfy-6ad7ef1aa213b61c990d89f6": ["pfy:6aa27687e0707a4612dc1304"]
 };
+
+// Owner-hidden products (pricing/other reasons, not artwork). Remove an id to show it again.
+export const HIDDEN_PRODUCTS = {
+ "pfy-6ad7ef1ba213b61c990d89f7": "The Self-Made III Woven Blanket: sells at a loss until the price is raised"
+};

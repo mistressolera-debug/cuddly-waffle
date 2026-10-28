@@ -72,3 +72,5 @@ select{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--li
 footer{border-top:1px solid var(--line);padding:26px 0 40px;margin-top:20px;font-size:.88rem;text-align:center}
 footer a{color:var(--gold)}
 footer p{margin:4px 0}
+
+footer .links{font-size:.88rem}footer .links a{color:var(--gold);text-decoration:none}footer .links a:hover{text-decoration:underline}
